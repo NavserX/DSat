@@ -53,12 +53,18 @@ class ReparacionController extends Controller
     public function update(Request $request, $id)
     {
         $reparacion = Reparacion::findOrFail($id);
+
+        // Validamos también al actualizar para evitar datos corruptos
+        $request->validate([
+            'marca_id'    => 'exists:marcas,id',
+            'tecnico_id'  => 'exists:tecnicos,id',
+            'cliente_id'  => 'exists:clientes,id',
+        ]);
+
         $reparacion->update($request->all());
 
-        return response()->json([
-            'mensaje' => 'Reparación actualizada',
-            'datos'   => $reparacion
-        ]);
+        // Cargamos las relaciones para que el Frontend vea los nombres actualizados
+        return response()->json($reparacion->load(['marca', 'tecnico', 'cliente']));
     }
 
     /**
@@ -69,6 +75,7 @@ class ReparacionController extends Controller
         $reparacion = Reparacion::findOrFail($id);
         $reparacion->delete();
 
-        return response()->json(['mensaje' => 'Reparación eliminada']);
+        // Devolvemos un 204 (No Content) o un mensaje de éxito
+        return response()->json(['mensaje' => 'Reparación eliminada'], 200);
     }
 }

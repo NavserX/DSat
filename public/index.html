@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>FixIt - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex justify-center items-center">
+
+<div class="bg-white p-8 rounded shadow-md w-96">
+    <h1 class="text-2xl font-bold mb-6 text-center text-blue-600">Gestión de Copiadoras Login</h1>
+
+    <input type="email" id="email" placeholder="Email" class="w-full p-2 border mb-4 rounded" value="admin@test.com">
+    <input type="password" id="password" placeholder="Contraseña" class="w-full p-2 border mb-4 rounded" value="password123">
+
+    <button onclick="login()" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Entrar</button>
+    <p id="error" class="text-red-500 text-sm mt-4 text-center"></p>
+</div>
+
+<script>
+    async function login() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // GUADAR EL TOKEN EN EL NAVEGADOR
+                localStorage.setItem('token', data.access_token);
+                window.location.href = 'dashboard.html'; // Redirigir
+            } else {
+                document.getElementById('error').innerText = data.message || 'Error al entrar';
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,13 +1,37 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ReparacionController;
 
-Route::get('/user', function (Request $request) {
+
+
+Route::post('/login', function (Request $request) {
+    if (!Auth::attempt($request->only('email', 'password'))) {
+        return response()->json(['message' => 'Credenciales incorrectas'], 401);
+    }
+
+    $user = User::where('email', $request->email)->firstOrFail();
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'message' => 'Hola ' . $user->name,
+        'access_token' => $token,
+        'token_type' => 'Bearer',
+    ]);
+});
+
+/*Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+*/
 
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('reparaciones', ReparacionController::class);
+
+});
 
 /*
 |--------------------------------------------------------------------------
