@@ -2,19 +2,97 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>FixIt - Login</title>
+    <title>Digital Soluciones - Gestión Técnica</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/6b6f3e3b2a.js" crossorigin="anonymous"></script>
+
+    <style>
+        .fade-in {
+            animation: fadeIn 0.7s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 h-screen flex justify-center items-center">
 
-<div class="bg-white p-8 rounded shadow-md w-96">
-    <h1 class="text-2xl font-bold mb-6 text-center text-blue-600">Gestión de Copiadoras Login</h1>
+<body class="h-screen flex bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
 
-    <input type="email" id="email" placeholder="Email" class="w-full p-2 border mb-4 rounded" value="admin@test.com">
-    <input type="password" id="password" placeholder="Contraseña" class="w-full p-2 border mb-4 rounded" value="password123">
+<!-- PANEL IZQUIERDO CORPORATIVO -->
+<div class="hidden lg:flex w-1/2 text-white flex-col justify-center items-center p-12">
 
-    <button onclick="login()" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Entrar</button>
-    <p id="error" class="text-red-500 text-sm mt-4 text-center"></p>
+    <img src="img/logo-web-ofimatica-digital.webp"
+         alt="Digital Soluciones"
+         class="w-64 mb-8">
+
+    <h2 class="text-3xl font-bold mb-4">Servicio Técnico Especializado</h2>
+
+    <p class="text-lg text-blue-200 text-center max-w-md">
+        Plataforma interna de gestión de reparaciones, clientes y mantenimiento
+        de equipos de impresión profesional.
+    </p>
+
+    <div class="mt-8 space-y-3 text-blue-300">
+        <p><i class="fas fa-tools mr-2"></i> Gestión de averías</p>
+        <p><i class="fas fa-print mr-2"></i> Control de copiadoras</p>
+        <p><i class="fas fa-user-cog mr-2"></i> Panel de técnicos</p>
+        <p><i class="fas fa-chart-line mr-2"></i> Seguimiento de reparaciones</p>
+    </div>
+</div>
+
+<!-- PANEL LOGIN -->
+<div class="flex w-full lg:w-1/2 justify-center items-center">
+
+    <div class="bg-white p-10 rounded-2xl shadow-2xl w-96 fade-in">
+
+        <h1 class="text-2xl font-semibold text-gray-700 text-center mb-6">
+            Acceso Plataforma Técnica
+        </h1>
+
+        <!-- EMAIL -->
+        <div class="mb-4 relative">
+            <i class="fas fa-envelope absolute left-3 top-3 text-gray-400"></i>
+            <input type="email"
+                   id="email"
+                   placeholder="Correo corporativo"
+                   value="admin@test.com"
+                   class="w-full pl-10 p-3 border border-gray-300 rounded-lg
+                          focus:outline-none focus:ring-2 focus:ring-blue-500
+                          transition duration-200">
+        </div>
+
+        <!-- PASSWORD -->
+        <div class="mb-6 relative">
+            <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
+            <input type="password"
+                   id="password"
+                   placeholder="Contraseña"
+                   value="password123"
+                   class="w-full pl-10 p-3 border border-gray-300 rounded-lg
+                          focus:outline-none focus:ring-2 focus:ring-blue-500
+                          transition duration-200">
+        </div>
+
+        <!-- BOTÓN -->
+        <button onclick="login()"
+                class="w-full bg-blue-600 text-white p-3 rounded-lg
+                       hover:bg-blue-700 hover:shadow-lg
+                       active:scale-95 transition duration-200 font-semibold">
+            Iniciar Sesión
+        </button>
+
+        <p id="error"
+           class="text-red-500 text-sm mt-4 text-center font-medium"></p>
+
+        <!-- FOOTER -->
+        <div class="text-center text-xs text-gray-400 mt-6">
+            © 2026 Digital Soluciones - Sistema interno
+        </div>
+
+    </div>
+
 </div>
 
 <script>
@@ -32,16 +110,19 @@
             const data = await response.json();
 
             if (response.ok) {
-                // GUADAR EL TOKEN EN EL NAVEGADOR
                 localStorage.setItem('token', data.access_token);
-                window.location.href = 'dashboard.html'; // Redirigir
+                window.location.href = 'dashboard.html';
             } else {
-                document.getElementById('error').innerText = data.message || 'Error al entrar';
+                document.getElementById('error').innerText =
+                    data.message || 'Credenciales incorrectas';
             }
+
         } catch (error) {
-            console.error(error);
+            document.getElementById('error').innerText =
+                'No se puede conectar con el servidor';
         }
     }
 </script>
+
 </body>
 </html>

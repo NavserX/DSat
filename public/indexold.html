@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ofimática Digital SAT - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* Animación suave de aparición */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="h-screen flex justify-center items-center
+             bg-gradient-to-br from-blue-100 via-white to-blue-200">
+
+<div class="bg-white/80 backdrop-blur-lg p-10 rounded-2xl shadow-xl w-96 fade-in">
+
+    <!-- LOGO -->
+    <div class="flex justify-center mb-6">
+        <img src="img/logo-web-ofimatica-digital.webp"
+             alt="Digital Soluciones"
+             class="w-40 hover:scale-105 transition duration-300">
+    </div>
+
+    <h1 class="text-xl font-semibold mb-6 text-center text-gray-700">
+        Gestión de Copiadoras
+    </h1>
+
+    <!-- EMAIL -->
+    <div class="mb-4">
+        <input type="email"
+               id="email"
+               placeholder="Email"
+               value="admin@test.com"
+               class="w-full p-3 border border-gray-300 rounded-lg
+                      focus:outline-none focus:ring-2 focus:ring-blue-400
+                      transition duration-200">
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="mb-6">
+        <input type="password"
+               id="password"
+               placeholder="Contraseña"
+               value="password123"
+               class="w-full p-3 border border-gray-300 rounded-lg
+                      focus:outline-none focus:ring-2 focus:ring-blue-400
+                      transition duration-200">
+    </div>
+
+    <!-- BOTÓN -->
+    <button onclick="login()"
+            class="w-full bg-blue-600 text-white p-3 rounded-lg
+                   hover:bg-blue-700 hover:shadow-lg
+                   active:scale-95 transition duration-200">
+        Entrar
+    </button>
+
+    <p id="error"
+       class="text-red-500 text-sm mt-4 text-center font-medium"></p>
+</div>
+
+<script>
+    async function login() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({email, password})
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                localStorage.setItem('token', data.access_token);
+                window.location.href = 'dashboard.html';
+            } else {
+                document.getElementById('error').innerText = data.message || 'Error al entrar';
+            }
+        } catch (error) {
+            document.getElementById('error').innerText = 'Error de conexión con el servidor';
+        }
+    }
+</script>
+
+</body>
+</html>

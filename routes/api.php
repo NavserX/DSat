@@ -1,10 +1,14 @@
 <?php
 
 use App\Models\User;
+use App\Models\Cliente;
+use App\Models\Tecnico;
+use App\Models\Marca;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ReparacionController;
+
 
 
 
@@ -31,6 +35,18 @@ Route::post('/login', function (Request $request) {
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('reparaciones', ReparacionController::class);
 
+    Route::get('/clientes', function () {
+        return Cliente::all();
+    });
+
+    Route::get('/tecnicos', function () {
+        return Tecnico::all();
+    });
+
+    Route::get('/marcas', function () {
+        return Marca::all();
+    });
+
 });
 
 /*
@@ -53,3 +69,4 @@ Route::put('/reparaciones/{id}', [ReparacionController::class, 'update']);
 
 // 5. Elimino una reparación (DELETE)
 Route::delete('/reparaciones/{id}', [ReparacionController::class, 'destroy']);
+

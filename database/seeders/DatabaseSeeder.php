@@ -21,9 +21,9 @@ class DatabaseSeeder extends Seeder
         \App\Models\Marca::create(['nombre' => 'Sharp']);
 
         // 2. Técnicos (Nombre y Email)
-        \App\Models\Tecnico::create(['nombre' => 'Sergio Navarro', 'email' => 'sergio@od.com']);
-        \App\Models\Tecnico::create(['nombre' => 'Jose Cabrera', 'email' => 'jose@od.com']);
-        \App\Models\Tecnico::create(['nombre' => 'Alfonos Campos', 'email' => 'alfonso@od.com']);
+        \App\Models\Tecnico::create(['nombre' => 'Sergio Navarro', 'email' => 'taller@ofimaticadigital.es']);
+        \App\Models\Tecnico::create(['nombre' => 'Jose Cabrera', 'email' => 'tecnico1.ods@gmail.com']);
+        \App\Models\Tecnico::create(['nombre' => 'Alfonos Campos', 'email' => 'tecnico3.ods@gmail.com']);
 
         // 3. Clientes (Nombre, Empresa y Email)
         // ¡ASEGÚRATE DE QUE AQUÍ DIGA \App\Models\Cliente!
