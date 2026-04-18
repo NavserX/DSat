@@ -16,6 +16,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
+    <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
 </head>
 
 <body class="h-screen flex bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
@@ -113,7 +114,7 @@
 
             if (response.ok) {
                 localStorage.setItem('token', data.access_token);
-                window.location.href = 'dashboard.html';
+                window.location.href = '/dashboard';
             } else {
                 document.getElementById('error').innerText =
                     data.message || 'Credenciales incorrectas';

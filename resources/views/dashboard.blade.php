@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Digital Soluciones - Panel Técnico</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
 </head>
 
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white">
