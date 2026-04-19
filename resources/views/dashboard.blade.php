@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Soluciones - Panel Técnico</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
@@ -9,54 +10,61 @@
 
 <body class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 text-white">
 
-<div class="flex">
+<div class="flex flex-col lg:flex-row min-h-screen">
 
-    <aside class="w-64 min-h-screen bg-slate-950/60 backdrop-blur-lg p-6 flex flex-col">
+    <aside class="w-full lg:w-64 bg-slate-950/60 backdrop-blur-lg p-4 lg:p-6 flex flex-col shrink-0">
 
-        <div class="mb-10">
-            <img src="img/logo-web-ofimatica-digital2.webp" class="w-40 mb-4" alt="Logo">
-            <h2 class="text-lg font-semibold text-blue-300">Panel Técnico</h2>
+        <div class="mb-4 lg:mb-10 flex flex-row lg:flex-col items-center lg:items-start justify-between">
+            <div class="flex items-center lg:flex-col lg:items-start">
+                <img src="img/logo-web-ofimatica-digital2.webp" class="w-32 lg:w-40 mr-4 lg:mr-0 lg:mb-4" alt="Logo">
+                <h2 class="text-base lg:text-lg font-semibold text-blue-300">Panel Técnico</h2>
+            </div>
+
+            <button onclick="logout()"
+                    class="block lg:hidden bg-red-600 text-sm px-4 py-2 rounded hover:bg-red-700 transition">
+                Salir
+            </button>
         </div>
 
-        <nav class="space-y-2 flex-1">
-            <a href="#" class="block px-4 py-2 rounded bg-blue-600">Reparaciones</a>
-            <a href="#" class="block px-4 py-2 rounded hover:bg-slate-800 transition">Clientes</a>
-            <a href="#" class="block px-4 py-2 rounded hover:bg-slate-800 transition">Técnicos</a>
-            <a href="#" class="block px-4 py-2 rounded hover:bg-slate-800 transition">Estadísticas</a>
+        <nav class="flex gap-2 lg:flex-col lg:space-y-2 flex-1 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+            <a href="#" class="px-4 py-2 rounded bg-blue-600 whitespace-nowrap">Reparaciones</a>
+            <a href="#" class="px-4 py-2 rounded hover:bg-slate-800 transition whitespace-nowrap">Clientes</a>
+            <a href="#" class="px-4 py-2 rounded hover:bg-slate-800 transition whitespace-nowrap">Técnicos</a>
+            <a href="#" class="px-4 py-2 rounded hover:bg-slate-800 transition whitespace-nowrap">Estadísticas</a>
         </nav>
 
         <button onclick="logout()"
-                class="mt-6 bg-red-600 py-2 rounded hover:bg-red-700 transition">
+                class="hidden lg:block mt-6 bg-red-600 py-2 rounded hover:bg-red-700 transition">
             Cerrar sesión
         </button>
     </aside>
 
-    <main class="flex-1 p-10">
+    <main class="flex-1 p-4 sm:p-6 lg:p-10 w-full overflow-hidden">
 
-        <h1 class="text-3xl font-bold mb-8 text-blue-300">
+        <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">
             Gestión de Reparaciones
         </h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="bg-white/10 backdrop-blur-lg p-6 rounded-xl shadow-lg">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-8 lg:mb-10">
+            <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
                 <p class="text-sm text-blue-200">Pendientes</p>
-                <p id="stat-pendientes" class="text-3xl font-bold text-yellow-400">0</p>
+                <p id="stat-pendientes" class="text-2xl lg:text-3xl font-bold text-yellow-400">0</p>
             </div>
 
-            <div class="bg-white/10 backdrop-blur-lg p-6 rounded-xl shadow-lg">
+            <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
                 <p class="text-sm text-blue-200">En proceso</p>
-                <p id="stat-proceso" class="text-3xl font-bold text-blue-400">0</p>
+                <p id="stat-proceso" class="text-2xl lg:text-3xl font-bold text-blue-400">0</p>
             </div>
 
-            <div class="bg-white/10 backdrop-blur-lg p-6 rounded-xl shadow-lg">
+            <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
                 <p class="text-sm text-blue-200">Terminadas</p>
-                <p id="stat-terminado" class="text-3xl font-bold text-green-400">0</p>
+                <p id="stat-terminado" class="text-2xl lg:text-3xl font-bold text-green-400">0</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
-            <div class="bg-white text-gray-800 p-6 rounded-2xl shadow-xl">
+            <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1">
                 <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title">
                     Nueva Reparación
                 </h2>
@@ -91,51 +99,35 @@
                     <option value="terminado">Terminado</option>
                 </select>
 
-                <div class="flex gap-2 mt-6">
+                <div class="flex flex-col sm:flex-row gap-2 mt-6">
                     <button onclick="guardarReparacion()"
                             class="flex-1 bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition font-semibold">
                         Guardar
                     </button>
                     <button onclick="limpiarFormulario()" type="button"
-                            class="bg-gray-200 text-gray-700 p-2 rounded hover:bg-gray-300 transition font-semibold">
+                            class="flex-1 bg-gray-200 text-gray-700 p-2 rounded hover:bg-gray-300 transition font-semibold">
                         Limpiar
                     </button>
                 </div>
             </div>
 
-            <div class="lg:col-span-2 bg-white text-gray-800 p-6 rounded-2xl shadow-xl">
-                <table class="min-w-full text-sm">
-                    <thead>
-                    <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
-                        <th class="py-3 px-4 text-left">ID</th>
-                        <th class="py-3 px-4 text-left">Cliente / Marca</th>
-                        <th class="py-3 px-4 text-left">Estado</th>
-                        <th class="py-3 px-4 text-center">Acciones</th>
-                    </tr>
-                    </thead>
-                    <tbody id="tabla-reparaciones"></tbody>
-                </table>
+            <div class="lg:col-span-2 bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-1 lg:order-2">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
+                            <th class="py-3 px-4 text-left whitespace-nowrap">ID</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Cliente / Marca</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Estado</th>
+                            <th class="py-3 px-4 text-center whitespace-nowrap">Acciones</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabla-reparaciones"></tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
-
-        <!-- Mapas de Google
-        <div id="mapa-container" class="hidden mt-8 bg-white text-gray-800 p-6 rounded-2xl shadow-xl transition-all">
-            <h2 class="text-xl font-semibold mb-4 border-b pb-2">
-                Ubicación del Cliente
-            </h2>
-
-            <div class="relative w-full h-72 rounded-lg overflow-hidden group cursor-pointer border">
-                <a id="link-ruta" href="#" target="_blank" class="absolute inset-0 z-10 flex items-center justify-center bg-black/0 hover:bg-black/20 transition duration-300">
-                    <span class="opacity-0 group-hover:opacity-100 bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold shadow-lg transition transform translate-y-4 group-hover:translate-y-0">
-                        📍 Ver ruta en Google Maps
-                    </span>
-                </a>
-
-                <iframe id="mapa-iframe" class="w-full h-full border-0 pointer-events-none" allowfullscreen="" loading="lazy"></iframe>
-            </div>
-        </div> -->
-
     </main>
 </div>
 
@@ -144,67 +136,18 @@
     if (!token) window.location.href = 'index.html';
 
     // --- CARGA DE DESPLEGABLES ---
-
-    // Variable global para almacenar los datos completos de los clientes
     let listaClientes = [];
 
     async function cargarClientes() {
         try {
             const res = await fetch('/api/clientes', { headers: { 'Authorization': `Bearer ${token}` } });
             if (!res.ok) throw new Error('Error al cargar clientes');
-
-            listaClientes = await res.json(); // Guardamos los clientes aquí
-
+            listaClientes = await res.json();
             const select = document.getElementById('cliente_id');
-            select.innerHTML = '<option value="">Seleccione un cliente...</option>'; // Resetea opciones
+            select.innerHTML = '<option value="">Seleccione un cliente...</option>';
             listaClientes.forEach(c => select.innerHTML += `<option value="${c.id}">${c.nombre}</option>`);
         } catch (error) { console.error(error); }
     }
-
-    // --- LÓGICA DEL MAPA DE GOOGLE ---
-    document.getElementById('cliente_id').addEventListener('change', function() {
-        const clienteId = this.value;
-        const mapContainer = document.getElementById('mapa-container');
-        const mapIframe = document.getElementById('mapa-iframe');
-        const linkRuta = document.getElementById('link-ruta');
-
-        // Si se vuelve a la opción por defecto, ocultamos el mapa
-        if (!clienteId) {
-            mapContainer.classList.add('hidden');
-            return;
-        }
-
-        // Buscamos los datos completos del cliente seleccionado
-        const cliente = listaClientes.find(c => c.id == clienteId);
-
-        // OJO: Asegúrate de que tu backend devuelve un campo con la dirección (ej. 'direccion')
-        if (cliente && cliente.direccion) {
-            // Codificamos la dirección para que sea válida en una URL (cambia espacios por %20, etc.)
-            const direccionCodificada = encodeURIComponent(cliente.direccion);
-
-            // 1. Cargamos el mapa visual en el iframe
-            mapIframe.src = `https://maps.google.com/maps?q=${direccionCodificada}&output=embed`;
-
-            // 2. Preparamos el enlace para que abra Google Maps con la ruta (destination)
-            linkRuta.href = `https://www.google.com/maps/dir/?api=1&destination=${direccionCodificada}`;
-
-            // Mostramos el contenedor
-            mapContainer.classList.remove('hidden');
-        } else {
-            // Si el cliente no tiene dirección registrada en la BD, lo ocultamos
-            mapContainer.classList.add('hidden');
-        }
-    });
-
-    /*async function cargarClientes() {
-        try {
-            const res = await fetch('/api/clientes', { headers: { 'Authorization': `Bearer ${token}` } });
-            if (!res.ok) throw new Error('Error al cargar clientes');
-            const clientes = await res.json();
-            const select = document.getElementById('cliente_id');
-            clientes.forEach(c => select.innerHTML += `<option value="${c.id}">${c.nombre}</option>`);
-        } catch (error) { console.error(error); }
-    }*/
 
     async function cargarTecnicos() {
         try {
@@ -227,7 +170,6 @@
     }
 
     // --- CARGA Y GESTIÓN DE REPARACIONES ---
-
     async function cargarReparaciones() {
         try {
             const res = await fetch('/api/reparaciones', {
@@ -252,26 +194,25 @@
                     terminado: 'bg-green-100 text-green-700'
                 }[rep.estado] || 'bg-gray-100 text-gray-700';
 
-                // Usamos JSON.stringify y escapamos las comillas para evitar errores al pasar el objeto
-                const repJSON = JSON.stringify(rep).replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+                const repJSON = JSON.stringify(rep).replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
                 tbody.innerHTML += `
                 <tr class="border-b hover:bg-gray-50 transition">
-                    <td class="py-4 px-4 font-bold text-blue-600">#${rep.id}</td>
-                    <td class="py-4 px-4">
+                    <td class="py-4 px-4 font-bold text-blue-600 whitespace-nowrap">#${rep.id}</td>
+                    <td class="py-4 px-4 min-w-[200px]">
                         <div class="font-medium">${rep.cliente?.nombre || 'S/N'}</div>
                         <div class="text-gray-500 text-xs">${rep.marca?.nombre || 'S/N'}</div>
                     </td>
-                    <td class="py-4 px-4">
+                    <td class="py-4 px-4 whitespace-nowrap">
                         <span class="px-2 py-1 rounded-full text-xs font-semibold ${color}">
                             ${rep.estado}
                         </span>
                     </td>
-                    <td class="py-4 px-4 text-center space-x-2">
+                    <td class="py-4 px-4 text-center space-x-2 whitespace-nowrap">
                         <button onclick="editarReparacion('${repJSON}')"
-                                class="text-blue-500 hover:text-blue-700" title="Editar">✏️</button>
+                                class="text-blue-500 hover:text-blue-700 p-2" title="Editar">✏️</button>
                         <button onclick="borrarReparacion(${rep.id})"
-                                class="text-red-500 hover:text-red-700" title="Borrar">🗑️</button>
+                                class="text-red-500 hover:text-red-700 p-2" title="Borrar">🗑️</button>
                     </td>
                 </tr>
                 `;
@@ -293,7 +234,6 @@
             estado: document.getElementById('estado').value
         };
 
-        // Validación básica
         if (!datos.cliente_id || !datos.tecnico_id || !datos.marca_id) {
             alert('Por favor, selecciona un Cliente, Técnico y Marca.');
             return;
@@ -314,7 +254,7 @@
 
             if (res.ok) {
                 limpiarFormulario();
-                cargarReparaciones(); // Recargar tabla
+                cargarReparaciones();
             } else {
                 alert('Error al guardar la reparación');
             }
@@ -322,8 +262,9 @@
     }
 
     function editarReparacion(repJSON) {
-        // Desparsear el JSON escapado
-        const rep = JSON.parse(repJSON.replace(/&quot;/g, '"').replace(/&apos;/g, "'"));
+        // Restaurar entidades HTML para parsear correctamente
+        const decodedJSON = repJSON.replace(/&quot;/g, '"');
+        const rep = JSON.parse(decodedJSON);
 
         document.getElementById('form-title').innerText = 'Editar Reparación #' + rep.id;
         document.getElementById('rep-id').value = rep.id;
@@ -332,6 +273,9 @@
         document.getElementById('marca_id').value = rep.marca_id;
         document.getElementById('descripcion').value = rep.descripcion || '';
         document.getElementById('estado').value = rep.estado;
+
+        // Hacer scroll automático al formulario en móviles
+        document.getElementById('form-title').scrollIntoView({ behavior: 'smooth' });
     }
 
     async function borrarReparacion(id) {
@@ -363,10 +307,8 @@
 
     function logout() {
         localStorage.removeItem('token');
-        window.location.href = 'index.html';
+        window.location.href = '/';
     }
-
-
 
     // --- INICIALIZACIÓN ---
     cargarClientes();
