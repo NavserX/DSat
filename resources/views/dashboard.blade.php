@@ -24,10 +24,10 @@
         </div>
 
         <nav class="flex gap-2 lg:flex-col lg:space-y-2 flex-1 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-            <a href="#" class="px-4 py-2 rounded bg-blue-600 whitespace-nowrap">Reparaciones</a>
-            <a href="#" class="px-4 py-2 rounded hover:bg-slate-800 transition whitespace-nowrap">Clientes</a>
-            <a href="#" class="px-4 py-2 rounded hover:bg-slate-800 transition whitespace-nowrap">Técnicos</a>
-            <a href="#" class="px-4 py-2 rounded hover:bg-slate-800 transition whitespace-nowrap">Estadísticas</a>
+            <button onclick="mostrarPantalla('pantalla_reparaciones', this)" class="menu-btn w-full text-left px-4 py-2 rounded bg-blue-600 whitespace-nowrap transition">Reparaciones</button>
+            <button onclick="mostrarPantalla('pantalla_clientes', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">Historial Clientes</button>
+            <button onclick="mostrarPantalla('pantalla_tecnicos', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">Historial Técnicos</button>
+            <button class="w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition opacity-50 cursor-not-allowed" title="Próximamente">Estadísticas</button>
         </nav>
 
         <button onclick="logout()" class="hidden lg:block mt-6 bg-red-600 py-2 rounded hover:bg-red-700 transition">
@@ -35,115 +35,170 @@
         </button>
     </aside>
 
-    <main class="flex-1 p-4 sm:p-6 lg:p-10 w-full overflow-hidden">
+    <main class="flex-1 p-4 sm:p-6 lg:p-10 w-full overflow-hidden relative">
 
-        <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">
-            Gestión de Reparaciones
-        </h1>
+        <div id="pantalla_reparaciones" class="pantalla-seccion block">
+            <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">Gestión de Reparaciones</h1>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-8 lg:mb-10">
-            <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
-                <p class="text-sm text-blue-200">Pendientes</p>
-                <p id="stat-pendientes" class="text-2xl lg:text-3xl font-bold text-yellow-400">0</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-8 lg:mb-10">
+                <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
+                    <p class="text-sm text-blue-200">Pendientes</p>
+                    <p id="stat-pendientes" class="text-2xl lg:text-3xl font-bold text-yellow-400">0</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
+                    <p class="text-sm text-blue-200">En proceso</p>
+                    <p id="stat-proceso" class="text-2xl lg:text-3xl font-bold text-blue-400">0</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
+                    <p class="text-sm text-blue-200">Terminadas</p>
+                    <p id="stat-terminado" class="text-2xl lg:text-3xl font-bold text-green-400">0</p>
+                </div>
             </div>
-            <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
-                <p class="text-sm text-blue-200">En proceso</p>
-                <p id="stat-proceso" class="text-2xl lg:text-3xl font-bold text-blue-400">0</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title">Nueva Reparación</h2>
+                    <input type="hidden" id="rep-id">
+
+                    <label class="block text-sm mt-3">Cliente</label>
+                    <div class="flex gap-2 mt-1 relative">
+                        <div class="relative flex-1">
+                            <input type="hidden" id="cliente_id">
+                            <input type="text" id="cliente_search" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400" placeholder="Buscar cliente..." autocomplete="off" onkeyup="filtrarClientes('cliente_search', 'cliente_dropdown', seleccionarClienteReparacion)">
+                            <ul id="cliente_dropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-48 overflow-y-auto shadow-xl"></ul>
+                        </div>
+                        <button type="button" onclick="abrirModalCliente()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition" title="Nuevo Cliente">➕</button>
+                    </div>
+
+                    <div id="cliente_info" class="text-sm mt-2 p-3 bg-blue-50 text-blue-800 rounded hidden border border-blue-200"></div>
+
+                    <label class="block text-sm mt-3">Técnico</label>
+                    <select id="tecnico_id" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
+                        <option value="">Seleccione un técnico...</option>
+                    </select>
+
+                    <label class="block text-sm mt-3">Marca</label>
+                    <select id="marca_id" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
+                        <option value="">Seleccione una marca...</option>
+                    </select>
+
+                    <label class="block text-sm mt-3">Descripción</label>
+                    <textarea id="descripcion" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400" rows="3"></textarea>
+
+                    <label class="block text-sm mt-3">Fecha de Entrada</label>
+                    <input type="date" id="fecha_entrada" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
+
+                    <label class="block text-sm mt-3">Estado</label>
+                    <select id="estado" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en proceso">En proceso</option>
+                        <option value="terminado">Terminado</option>
+                    </select>
+
+                    <div class="flex flex-col sm:flex-row gap-2 mt-6">
+                        <button onclick="guardarReparacion()" class="flex-1 bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition font-semibold">Guardar</button>
+                        <button onclick="limpiarFormulario()" type="button" class="flex-1 bg-gray-200 text-gray-700 p-2 rounded hover:bg-gray-300 transition font-semibold">Limpiar</button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-1 lg:order-2">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
+                                <th class="py-3 px-4 text-left whitespace-nowrap">Aviso</th>
+                                <th class="py-3 px-4 text-left whitespace-nowrap">Cliente / Marca</th>
+                                <th class="py-3 px-4 text-left whitespace-nowrap">Estado</th>
+                                <th class="py-3 px-4 text-center whitespace-nowrap">Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabla-reparaciones"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
-                <p class="text-sm text-blue-200">Terminadas</p>
-                <p id="stat-terminado" class="text-2xl lg:text-3xl font-bold text-green-400">0</p>
+
+            <div id="mapa_container" class="mt-8 bg-white p-5 lg:p-6 rounded-2xl shadow-xl hidden">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Ubicación del Cliente</h2>
+                <div class="w-full h-72 rounded-xl overflow-hidden shadow-inner">
+                    <iframe id="google_map_iframe" class="w-full h-full border-0" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+                <div class="mt-6 text-center lg:text-left">
+                    <a id="link_como_llegar" href="#" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold shadow-md">
+                        📍 Cómo llegar (Abrir en Google Maps)
+                    </a>
+                </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div id="pantalla_clientes" class="pantalla-seccion hidden">
+            <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">Historial por Cliente</h1>
 
-            <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative">
-                <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title">
-                    Nueva Reparación
-                </h2>
-
-                <input type="hidden" id="rep-id">
-
-                <label class="block text-sm mt-3">Cliente</label>
-                <div class="flex gap-2 mt-1 relative">
-                    <div class="relative flex-1">
-                        <input type="hidden" id="cliente_id">
-                        <input type="text" id="cliente_search"
-                               class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
-                               placeholder="Buscar cliente..."
-                               autocomplete="off"
-                               onkeyup="filtrarClientes()">
-
-                        <ul id="cliente_dropdown"
-                            class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-48 overflow-y-auto shadow-xl">
-                        </ul>
-                    </div>
-                    <button type="button" onclick="abrirModalCliente()"
-                            class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition" title="Nuevo Cliente">
-                        ➕
-                    </button>
-                </div>
-
-                <div id="cliente_info" class="text-sm mt-2 p-3 bg-blue-50 text-blue-800 rounded hidden border border-blue-200"></div>
-
-                <label class="block text-sm mt-3">Técnico</label>
-                <select id="tecnico_id" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
-                    <option value="">Seleccione un técnico...</option>
-                </select>
-
-                <label class="block text-sm mt-3">Marca</label>
-                <select id="marca_id" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
-                    <option value="">Seleccione una marca...</option>
-                </select>
-
-                <label class="block text-sm mt-3">Descripción</label>
-                <textarea id="descripcion" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400" rows="3"></textarea>
-
-                <label class="block text-sm mt-3">Estado</label>
-                <select id="estado" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
-                    <option value="pendiente">Pendiente</option>
-                    <option value="en proceso">En proceso</option>
-                    <option value="terminado">Terminado</option>
-                </select>
-
-                <div class="flex flex-col sm:flex-row gap-2 mt-6">
-                    <button onclick="guardarReparacion()" class="flex-1 bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition font-semibold">
-                        Guardar
-                    </button>
-                    <button onclick="limpiarFormulario()" type="button" class="flex-1 bg-gray-200 text-gray-700 p-2 rounded hover:bg-gray-300 transition font-semibold">
-                        Limpiar
-                    </button>
+            <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-xl text-gray-800 mb-8">
+                <label class="block text-sm font-semibold mb-2">Busca un Cliente para ver su historial:</label>
+                <div class="relative w-full lg:w-1/2">
+                    <input type="text" id="historial_cliente_search" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400" placeholder="Escribe el nombre o teléfono..." autocomplete="off" onkeyup="filtrarClientes('historial_cliente_search', 'historial_cliente_dropdown', cargarHistorialCliente)">
+                    <ul id="historial_cliente_dropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-48 overflow-y-auto shadow-xl"></ul>
                 </div>
             </div>
 
-            <div class="lg:col-span-2 bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-1 lg:order-2">
+            <div id="contenedor_historial_cliente" class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl hidden">
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2 text-blue-600" id="titulo_historial_cliente">Reparaciones de Cliente</h2>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
                         <thead>
                         <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
-                            <th class="py-3 px-4 text-left whitespace-nowrap">ID</th>
-                            <th class="py-3 px-4 text-left whitespace-nowrap">Cliente / Marca</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Fecha</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Equipo/Avería</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Técnico</th>
                             <th class="py-3 px-4 text-left whitespace-nowrap">Estado</th>
-                            <th class="py-3 px-4 text-center whitespace-nowrap">Acciones</th>
                         </tr>
                         </thead>
-                        <tbody id="tabla-reparaciones"></tbody>
+                        <tbody id="tabla-historial-cliente"></tbody>
                     </table>
                 </div>
             </div>
-
         </div>
 
-        <div id="mapa_container" class="mt-8 bg-white p-5 lg:p-6 rounded-2xl shadow-xl hidden">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">Ubicación del Cliente</h2>
-            <div class="w-full h-72 rounded-xl overflow-hidden shadow-inner">
-                <iframe id="google_map_iframe" class="w-full h-full border-0" allowfullscreen="" loading="lazy"></iframe>
+        <div id="pantalla_tecnicos" class="pantalla-seccion hidden">
+            <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">Trabajo de Técnicos</h1>
+
+            <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-xl text-gray-800 mb-8 flex flex-col md:flex-row gap-4 items-end">
+                <div class="w-full md:w-1/3">
+                    <label class="block text-sm font-semibold mb-2">Selecciona un Técnico:</label>
+                    <select id="filtro_tecnico_id" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-400">
+                        <option value="">Todos los técnicos</option>
+                    </select>
+                </div>
+                <div class="w-full md:w-1/4">
+                    <label class="block text-sm font-semibold mb-2">Desde (Fecha Entrada):</label>
+                    <input type="date" id="filtro_fecha_inicio" class="w-full p-2.5 border rounded">
+                </div>
+                <div class="w-full md:w-1/4">
+                    <label class="block text-sm font-semibold mb-2">Hasta:</label>
+                    <input type="date" id="filtro_fecha_fin" class="w-full p-2.5 border rounded">
+                </div>
+                <div class="w-full md:w-auto">
+                    <button onclick="filtrarHistorialTecnicos()" class="w-full md:w-auto bg-blue-600 text-white px-6 py-2.5 rounded hover:bg-blue-700 transition font-semibold">Filtrar</button>
+                </div>
             </div>
-            <div class="mt-6 text-center lg:text-left">
-                <a id="link_como_llegar" href="#" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold shadow-md">
-                    📍 Cómo llegar (Abrir en Google Maps)
-                </a>
+
+            <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Fecha Entrada</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Técnico</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Cliente</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Avería Registrada</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabla-historial-tecnico">
+                        <tr><td colspan="4" class="text-center py-6 text-gray-500">Selecciona filtros arriba y pulsa Buscar.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -179,40 +234,66 @@
     if (!token) window.location.href = 'index.html';
 
     let listaClientes = [];
+    let todasLasReparaciones = []; // Almacena todos los avisos para los historiales
 
-    // --- CARGA DE DATOS ---
+    // --- NAVEGACIÓN SPA ---
+    function mostrarPantalla(idPantalla, botonClicado) {
+        document.querySelectorAll('.pantalla-seccion').forEach(div => div.classList.add('hidden'));
+        document.getElementById(idPantalla).classList.remove('hidden');
+
+        document.querySelectorAll('.menu-btn').forEach(btn => {
+            btn.classList.remove('bg-blue-600');
+            btn.classList.add('hover:bg-slate-800');
+        });
+        botonClicado.classList.remove('hover:bg-slate-800');
+        botonClicado.classList.add('bg-blue-600');
+    }
+
+    // --- MANEJO DE FECHA ---
+    function setFechaHoy() {
+        const hoy = new Date().toISOString().split('T')[0];
+        document.getElementById('fecha_entrada').value = hoy;
+    }
+    setFechaHoy();
+
+    // --- CARGAS INICIALES DE API ---
     async function cargarClientes() {
         try {
             const res = await fetch('/api/clientes', { headers: { 'Authorization': `Bearer ${token}` } });
-            if (!res.ok) throw new Error('Error al cargar clientes');
-            listaClientes = await res.json();
+            if (res.ok) listaClientes = await res.json();
         } catch (error) { console.error(error); }
     }
 
     async function cargarTecnicos() {
         try {
             const res = await fetch('/api/tecnicos', { headers: { 'Authorization': `Bearer ${token}` } });
-            if (!res.ok) throw new Error('Error al cargar técnicos');
-            const tecnicos = await res.json();
-            const select = document.getElementById('tecnico_id');
-            tecnicos.forEach(t => select.innerHTML += `<option value="${t.id}">${t.nombre}</option>`);
+            if (res.ok) {
+                const tecnicos = await res.json();
+                const selectForm = document.getElementById('tecnico_id');
+                const selectFiltro = document.getElementById('filtro_tecnico_id');
+                tecnicos.forEach(t => {
+                    selectForm.innerHTML += `<option value="${t.id}">${t.nombre}</option>`;
+                    selectFiltro.innerHTML += `<option value="${t.id}">${t.nombre}</option>`;
+                });
+            }
         } catch (error) { console.error(error); }
     }
 
     async function cargarMarcas() {
         try {
             const res = await fetch('/api/marcas', { headers: { 'Authorization': `Bearer ${token}` } });
-            if (!res.ok) throw new Error('Error al cargar marcas');
-            const marcas = await res.json();
-            const select = document.getElementById('marca_id');
-            marcas.forEach(m => select.innerHTML += `<option value="${m.id}">${m.nombre}</option>`);
+            if (res.ok) {
+                const marcas = await res.json();
+                const select = document.getElementById('marca_id');
+                marcas.forEach(m => select.innerHTML += `<option value="${m.id}">${m.nombre}</option>`);
+            }
         } catch (error) { console.error(error); }
     }
 
-    // --- BUSCADOR DE CLIENTES Y MAPA ---
-    function filtrarClientes() {
-        const query = document.getElementById('cliente_search').value.toLowerCase();
-        const dropdown = document.getElementById('cliente_dropdown');
+    // --- BUSCADOR REUTILIZABLE DE CLIENTES ---
+    function filtrarClientes(inputId, dropdownId, callbackSeleccion) {
+        const query = document.getElementById(inputId).value.toLowerCase();
+        const dropdown = document.getElementById(dropdownId);
         dropdown.innerHTML = '';
 
         if (query.length < 1) {
@@ -231,24 +312,21 @@
             filtrados.forEach(c => {
                 const li = document.createElement('li');
                 li.className = 'p-3 hover:bg-blue-50 cursor-pointer border-b text-gray-700 transition';
-                li.innerHTML = `
-                    <div class="font-semibold">${c.nombre}</div>
-                    <div class="text-xs text-gray-500">${c.telefono || 'Sin teléfono'} | ${c.direccion || 'Sin dirección'}</div>
-                `;
-                li.onclick = () => seleccionarCliente(c.id);
+                li.innerHTML = `<div class="font-semibold">${c.nombre}</div><div class="text-xs text-gray-500">${c.telefono || 'Sin teléfono'}</div>`;
+                li.onclick = () => {
+                    document.getElementById(inputId).value = c.nombre;
+                    dropdown.classList.add('hidden');
+                    callbackSeleccion(c);
+                };
                 dropdown.appendChild(li);
             });
         }
         dropdown.classList.remove('hidden');
     }
 
-    function seleccionarCliente(id) {
-        const cliente = listaClientes.find(c => c.id == id);
-        if(!cliente) return;
-
+    // Función al seleccionar cliente en "Nueva Reparación"
+    function seleccionarClienteReparacion(cliente) {
         document.getElementById('cliente_id').value = cliente.id;
-        document.getElementById('cliente_search').value = cliente.nombre;
-        document.getElementById('cliente_dropdown').classList.add('hidden');
 
         const infoDiv = document.getElementById('cliente_info');
         infoDiv.innerHTML = `
@@ -257,96 +335,120 @@
         `;
         infoDiv.classList.remove('hidden');
 
-        const mapContainer = document.getElementById('mapa_container');
         if (cliente.direccion) {
-            const iframe = document.getElementById('google_map_iframe');
-            const link = document.getElementById('link_como_llegar');
-            const encodedAddress = encodeURIComponent(cliente.direccion);
-
-            iframe.src = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-            link.href = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
-
-            mapContainer.classList.remove('hidden');
+            mostrarMapaDeTabla(encodeURIComponent(cliente.direccion));
         } else {
-            mapContainer.classList.add('hidden');
+            document.getElementById('mapa_container').classList.add('hidden');
         }
     }
 
-    // Ocultar desplegable al hacer clic fuera
-    document.addEventListener('click', function(e) {
-        const dropdown = document.getElementById('cliente_dropdown');
-        const searchInput = document.getElementById('cliente_search');
-        if (e.target !== searchInput && !dropdown.contains(e.target)) {
-            dropdown.classList.add('hidden');
+    // Función al seleccionar cliente en "Historial"
+    function cargarHistorialCliente(cliente) {
+        document.getElementById('titulo_historial_cliente').innerText = `Avisos de: ${cliente.nombre} - ${cliente.telefono || ''}`;
+        const tbody = document.getElementById('tabla-historial-cliente');
+        tbody.innerHTML = '';
+
+        const historial = todasLasReparaciones.filter(rep => rep.cliente_id === cliente.id);
+
+        if(historial.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-500">No hay historial para este cliente.</td></tr>`;
+        } else {
+            historial.forEach(rep => {
+                let fecha = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'Desconocida');
+                let color = { pendiente: 'text-yellow-600', "en proceso": 'text-blue-600', terminado: 'text-green-600' }[rep.estado] || 'text-gray-600';
+
+                tbody.innerHTML += `
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="py-3 px-4 font-mono text-xs text-blue-600">${fecha}</td>
+                    <td class="py-3 px-4"><strong>${rep.marca?.nombre || 'N/A'}</strong><br><span class="text-xs text-gray-500">${rep.descripcion || ''}</span></td>
+                    <td class="py-3 px-4 text-sm">${rep.tecnico?.nombre || 'N/A'}</td>
+                    <td class="py-3 px-4 font-semibold uppercase text-xs ${color}">${rep.estado}</td>
+                </tr>`;
+            });
         }
-    });
-
-    // --- MODAL NUEVO CLIENTE ---
-    function abrirModalCliente() {
-        // Pre-rellenar el nombre si el usuario ya escribió algo en el buscador
-        const currentSearch = document.getElementById('cliente_search').value;
-        document.getElementById('nuevo_cliente_nombre').value = currentSearch;
-        document.getElementById('nuevo_cliente_telefono').value = '';
-        document.getElementById('nuevo_cliente_direccion').value = '';
-        document.getElementById('modal_cliente').classList.remove('hidden');
+        document.getElementById('contenedor_historial_cliente').classList.remove('hidden');
     }
 
-    function cerrarModalCliente() {
-        document.getElementById('modal_cliente').classList.add('hidden');
-    }
+    // --- HISTORIAL TÉCNICOS ---
+    function filtrarHistorialTecnicos() {
+        const tecId = document.getElementById('filtro_tecnico_id').value;
+        const fechaInicio = document.getElementById('filtro_fecha_inicio').value;
+        const fechaFin = document.getElementById('filtro_fecha_fin').value;
+        const tbody = document.getElementById('tabla-historial-tecnico');
+        tbody.innerHTML = '';
 
-    async function guardarNuevoCliente() {
-        const nombre = document.getElementById('nuevo_cliente_nombre').value;
-        const telefono = document.getElementById('nuevo_cliente_telefono').value;
-        const direccion = document.getElementById('nuevo_cliente_direccion').value;
+        let filtrados = todasLasReparaciones;
 
-        if (!nombre) {
-            alert("El nombre es obligatorio.");
+        if (tecId) filtrados = filtrados.filter(rep => rep.tecnico_id == tecId);
+
+        if (fechaInicio) {
+            filtrados = filtrados.filter(rep => {
+                let fecha = rep.fecha_entrada || rep.created_at?.substring(0,10);
+                return fecha && fecha >= fechaInicio;
+            });
+        }
+
+        if (fechaFin) {
+            filtrados = filtrados.filter(rep => {
+                let fecha = rep.fecha_entrada || rep.created_at?.substring(0,10);
+                return fecha && fecha <= fechaFin;
+            });
+        }
+
+        if(filtrados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-500">No se encontraron avisos con estos filtros.</td></tr>`;
             return;
         }
 
-        const btn = document.querySelector('#modal_cliente button.bg-green-600');
-        btn.innerText = 'Guardando...';
-        btn.disabled = true;
-
-        try {
-            const res = await fetch('/api/clientes', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ nombre, telefono, direccion })
-            });
-
-            if (res.ok) {
-                const nuevoCliente = await res.json();
-                // Actualizar la lista local y seleccionar el nuevo cliente
-                await cargarClientes();
-                cerrarModalCliente();
-                seleccionarCliente(nuevoCliente.id || nuevoCliente.cliente.id); // Ajusta esto según lo que devuelva tu API al crear
-            } else {
-                alert('Error al crear el cliente');
-            }
-        } catch (error) {
-            console.error(error);
-            alert('Error de conexión');
-        } finally {
-            btn.innerText = 'Guardar Cliente';
-            btn.disabled = false;
-        }
+        filtrados.forEach(rep => {
+            let fecha = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'Desconocida');
+            tbody.innerHTML += `
+            <tr class="border-b hover:bg-gray-50">
+                <td class="py-3 px-4 font-mono text-xs text-blue-600">${fecha}</td>
+                <td class="py-3 px-4 font-semibold text-gray-700">${rep.tecnico?.nombre || 'N/A'}</td>
+                <td class="py-3 px-4 text-sm">${rep.cliente?.nombre || 'S/N'}</td>
+                <td class="py-3 px-4 text-xs text-gray-500">${rep.descripcion || ''}</td>
+            </tr>`;
+        });
     }
 
-    // --- GESTIÓN DE REPARACIONES ---
+    // Ocultar desplegables al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        ['cliente_dropdown', 'historial_cliente_dropdown'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el && !el.contains(e.target) && e.target.id !== id.replace('_dropdown', '_search')) {
+                el.classList.add('hidden');
+            }
+        });
+    });
+
+    // --- MAPA ---
+    function mostrarMapaDeTabla(direccionCodificada) {
+        const mapContainer = document.getElementById('mapa_container');
+        const iframe = document.getElementById('google_map_iframe');
+        const link = document.getElementById('link_como_llegar');
+
+        iframe.src = `https://maps.google.com/maps?q=${direccionCodificada}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+        link.href = `https://maps.google.com/maps?q=${direccionCodificada}`;
+
+        mapContainer.classList.remove('hidden');
+        mapContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // --- CRUD REPARACIONES ---
     async function cargarReparaciones() {
         try {
             const res = await fetch('/api/reparaciones', { headers: { 'Authorization': `Bearer ${token}` } });
             if (!res.ok) throw new Error('Error al cargar reparaciones');
             const data = await res.json();
+            todasLasReparaciones = data; // Guardamos en memoria global
 
             const tbody = document.getElementById('tabla-reparaciones');
             tbody.innerHTML = '';
             let pendientes = 0, proceso = 0, terminado = 0;
+
+            // Ordenamos para que las más nuevas salgan arriba
+            data.sort((a,b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id));
 
             data.forEach(rep => {
                 if (rep.estado === 'pendiente') pendientes++;
@@ -359,19 +461,29 @@
                     terminado: 'bg-green-100 text-green-700'
                 }[rep.estado] || 'bg-gray-100 text-gray-700';
 
-                const repJSON = JSON.stringify(rep).replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                const repJSON = JSON.stringify(rep).replace(/"/g, '&quot;');
+                let fechaFormateada = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
+
+                let btnMapa = '';
+                if (rep.cliente && rep.cliente.direccion) {
+                    btnMapa = `<button type="button" onclick="mostrarMapaDeTabla('${encodeURIComponent(rep.cliente.direccion)}')" class="text-green-500 hover:text-green-700 p-2" title="Ver en mapa">📍</button>`;
+                }
 
                 tbody.innerHTML += `
                 <tr class="border-b hover:bg-gray-50 transition">
-                    <td class="py-4 px-4 font-bold text-blue-600 whitespace-nowrap">#${rep.id}</td>
+                    <td class="py-4 px-4 whitespace-nowrap">
+                        <div class="font-bold text-blue-600">#${rep.id}</div>
+                        <div class="text-gray-500 text-xs mt-1">📅 ${fechaFormateada}</div>
+                    </td>
                     <td class="py-4 px-4 min-w-[200px]">
                         <div class="font-medium">${rep.cliente?.nombre || 'S/N'}</div>
-                        <div class="text-gray-500 text-xs">${rep.marca?.nombre || 'S/N'}</div>
+                        <div class="text-gray-500 text-xs mt-1">${rep.marca?.nombre || 'S/N'}</div>
                     </td>
                     <td class="py-4 px-4 whitespace-nowrap">
                         <span class="px-2 py-1 rounded-full text-xs font-semibold ${color}">${rep.estado}</span>
                     </td>
-                    <td class="py-4 px-4 text-center space-x-2 whitespace-nowrap">
+                    <td class="py-4 px-4 text-center space-x-1 whitespace-nowrap">
+                        ${btnMapa}
                         <button onclick="editarReparacion('${repJSON}')" class="text-blue-500 hover:text-blue-700 p-2" title="Editar">✏️</button>
                         <button onclick="borrarReparacion(${rep.id})" class="text-red-500 hover:text-red-700 p-2" title="Borrar">🗑️</button>
                     </td>
@@ -392,46 +504,40 @@
             tecnico_id: document.getElementById('tecnico_id').value,
             marca_id: document.getElementById('marca_id').value,
             descripcion: document.getElementById('descripcion').value,
+            fecha_entrada: document.getElementById('fecha_entrada').value,
             estado: document.getElementById('estado').value
         };
 
         if (!datos.cliente_id || !datos.tecnico_id || !datos.marca_id) {
-            alert('Por favor, selecciona un Cliente, Técnico y Marca.');
+            alert('Por favor, selecciona Cliente, Técnico y Marca.');
             return;
         }
 
-        const metodo = id ? 'PUT' : 'POST';
         const url = id ? `/api/reparaciones/${id}` : '/api/reparaciones';
-
         try {
             const res = await fetch(url, {
-                method: metodo,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify(datos)
             });
 
             if (res.ok) {
                 limpiarFormulario();
                 cargarReparaciones();
-            } else {
-                alert('Error al guardar la reparación');
-            }
+            } else alert('Error al guardar la reparación');
         } catch (error) { console.error(error); }
     }
 
     function editarReparacion(repJSON) {
+        // Restaurar comillas para parsear el JSON
         const decodedJSON = repJSON.replace(/&quot;/g, '"');
         const rep = JSON.parse(decodedJSON);
 
         document.getElementById('form-title').innerText = 'Editar Reparación #' + rep.id;
         document.getElementById('rep-id').value = rep.id;
 
-        // Cargar el cliente
-        if (rep.cliente_id) {
-            seleccionarCliente(rep.cliente_id);
+        if (rep.cliente_id && rep.cliente) {
+            seleccionarClienteReparacion(rep.cliente);
         }
 
         document.getElementById('tecnico_id').value = rep.tecnico_id;
@@ -439,38 +545,76 @@
         document.getElementById('descripcion').value = rep.descripcion || '';
         document.getElementById('estado').value = rep.estado;
 
+        if(rep.fecha_entrada) {
+            document.getElementById('fecha_entrada').value = rep.fecha_entrada;
+        }
+
         document.getElementById('form-title').scrollIntoView({ behavior: 'smooth' });
     }
 
     async function borrarReparacion(id) {
-        if (!confirm('¿Estás seguro de que deseas borrar esta reparación?')) return;
+        if (!confirm('¿Estás seguro de que deseas borrar este aviso?')) return;
         try {
             const res = await fetch(`/api/reparaciones/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) {
-                cargarReparaciones();
-            } else {
-                alert('Error al borrar la reparación');
-            }
+            if (res.ok) cargarReparaciones();
+            else alert('Error al borrar la reparación');
         } catch (error) { console.error(error); }
     }
 
     function limpiarFormulario() {
         document.getElementById('form-title').innerText = 'Nueva Reparación';
         document.getElementById('rep-id').value = '';
-
-        // Limpiar cliente
         document.getElementById('cliente_id').value = '';
         document.getElementById('cliente_search').value = '';
         document.getElementById('cliente_info').classList.add('hidden');
         document.getElementById('mapa_container').classList.add('hidden');
-
         document.getElementById('tecnico_id').value = '';
         document.getElementById('marca_id').value = '';
         document.getElementById('descripcion').value = '';
         document.getElementById('estado').value = 'pendiente';
+        setFechaHoy(); // Restablece a la fecha de hoy
+    }
+
+    // --- MODAL CLIENTES ---
+    function abrirModalCliente() {
+        document.getElementById('nuevo_cliente_nombre').value = document.getElementById('cliente_search').value;
+        document.getElementById('nuevo_cliente_telefono').value = '';
+        document.getElementById('nuevo_cliente_direccion').value = '';
+        document.getElementById('modal_cliente').classList.remove('hidden');
+    }
+
+    function cerrarModalCliente() {
+        document.getElementById('modal_cliente').classList.add('hidden');
+    }
+
+    async function guardarNuevoCliente() {
+        const nombre = document.getElementById('nuevo_cliente_nombre').value;
+        const telefono = document.getElementById('nuevo_cliente_telefono').value;
+        const direccion = document.getElementById('nuevo_cliente_direccion').value;
+
+        if (!nombre) return alert("El nombre es obligatorio.");
+
+        const btn = document.querySelector('#modal_cliente button.bg-green-600');
+        btn.innerText = 'Guardando...'; btn.disabled = true;
+
+        try {
+            const res = await fetch('/api/clientes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ nombre, telefono, direccion })
+            });
+
+            if (res.ok) {
+                const nuevoCliente = await res.json();
+                await cargarClientes();
+                cerrarModalCliente();
+                seleccionarClienteReparacion(nuevoCliente.id ? nuevoCliente : nuevoCliente.cliente);
+            } else alert('Error al crear el cliente');
+        } catch (error) { console.error(error); alert('Error de conexión'); }
+        finally { btn.innerText = 'Guardar Cliente'; btn.disabled = false; }
     }
 
     function logout() {
@@ -478,7 +622,7 @@
         window.location.href = '/';
     }
 
-    // --- INICIALIZACIÓN ---
+    // --- ARRANQUE ---
     cargarClientes();
     cargarTecnicos();
     cargarMarcas();
