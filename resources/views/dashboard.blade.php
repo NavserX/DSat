@@ -15,7 +15,7 @@
     <aside class="w-full lg:w-64 bg-slate-950/60 backdrop-blur-lg p-4 lg:p-6 flex flex-col shrink-0">
         <div class="mb-4 lg:mb-10 flex flex-row lg:flex-col items-center lg:items-start justify-between">
             <div class="flex items-center lg:flex-col lg:items-start">
-                <img src="img/logo-web-ofimatica-digital2.webp" class="w-32 lg:w-40 mr-4 lg:mr-0 lg:mb-4" alt="Logo">
+                <img src="img/logo-web-ofimatica-digital2.webp" class="w-32 lg:w-40 mr-4 lg:mr-0 lg:mb-4" alt="Logo" onerror="this.style.display='none'">
                 <h2 class="text-base lg:text-lg font-semibold text-blue-300">Panel Técnico</h2>
             </div>
             <button onclick="logout()" class="block lg:hidden bg-red-600 text-sm px-4 py-2 rounded hover:bg-red-700 transition">
@@ -27,7 +27,7 @@
             <button onclick="mostrarPantalla('pantalla_reparaciones', this)" class="menu-btn w-full text-left px-4 py-2 rounded bg-blue-600 whitespace-nowrap transition">Reparaciones</button>
             <button onclick="mostrarPantalla('pantalla_clientes', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">Historial Clientes</button>
             <button onclick="mostrarPantalla('pantalla_tecnicos', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">Historial Técnicos</button>
-            <button class="w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition opacity-50 cursor-not-allowed" title="Próximamente">Estadísticas</button>
+            <button onclick="mostrarPantalla('pantalla_recursos', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">Recursos Técnicos</button>
         </nav>
 
         <button onclick="logout()" class="hidden lg:block mt-6 bg-red-600 py-2 rounded hover:bg-red-700 transition">
@@ -67,7 +67,7 @@
                             <input type="text" id="cliente_search" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400" placeholder="Buscar cliente..." autocomplete="off" onkeyup="filtrarClientes('cliente_search', 'cliente_dropdown', seleccionarClienteReparacion)">
                             <ul id="cliente_dropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-48 overflow-y-auto shadow-xl"></ul>
                         </div>
-                        <button type="button" onclick="abrirModalCliente()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition" title="Nuevo Cliente">➕</button>
+                        <button type="button" onclick="abrirModalCliente()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition shadow-md" title="Nuevo Cliente">➕</button>
                     </div>
 
                     <div id="cliente_info" class="text-sm mt-2 p-3 bg-blue-50 text-blue-800 rounded hidden border border-blue-200"></div>
@@ -85,8 +85,8 @@
                     <label class="block text-sm mt-3">Descripción</label>
                     <textarea id="descripcion" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400" rows="3"></textarea>
 
-                    <label class="block text-sm mt-3">Fecha de Entrada</label>
-                    <input type="date" id="fecha_entrada" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
+                    <label class="block text-sm mt-3 font-semibold text-blue-800">Fecha de Entrada</label>
+                    <input type="date" id="fecha_entrada" class="w-full p-2 border border-blue-300 rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-blue-50">
 
                     <label class="block text-sm mt-3">Estado</label>
                     <select id="estado" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
@@ -96,8 +96,8 @@
                     </select>
 
                     <div class="flex flex-col sm:flex-row gap-2 mt-6">
-                        <button onclick="guardarReparacion()" class="flex-1 bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition font-semibold">Guardar</button>
-                        <button onclick="limpiarFormulario()" type="button" class="flex-1 bg-gray-200 text-gray-700 p-2 rounded hover:bg-gray-300 transition font-semibold">Limpiar</button>
+                        <button onclick="guardarReparacion()" class="flex-1 bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition font-semibold shadow-md">Guardar</button>
+                        <button onclick="limpiarFormulario()" type="button" class="flex-1 bg-gray-200 text-gray-700 p-2 rounded hover:bg-gray-300 transition font-semibold shadow-md">Limpiar</button>
                     </div>
                 </div>
 
@@ -137,8 +137,8 @@
             <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-xl text-gray-800 mb-8">
                 <label class="block text-sm font-semibold mb-2">Busca un Cliente para ver su historial:</label>
                 <div class="relative w-full lg:w-1/2">
-                    <input type="text" id="historial_cliente_search" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400" placeholder="Escribe el nombre o teléfono..." autocomplete="off" onkeyup="filtrarClientes('historial_cliente_search', 'historial_cliente_dropdown', cargarHistorialCliente)">
-                    <ul id="historial_cliente_dropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-48 overflow-y-auto shadow-xl"></ul>
+                    <input type="text" id="historial_cliente_search" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400 bg-gray-50 text-lg" placeholder="Escribe el nombre o teléfono..." autocomplete="off" onkeyup="filtrarClientes('historial_cliente_search', 'historial_cliente_dropdown', cargarHistorialCliente)">
+                    <ul id="historial_cliente_dropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-60 overflow-y-auto shadow-2xl text-lg"></ul>
                 </div>
             </div>
 
@@ -148,9 +148,9 @@
                     <table class="min-w-full text-sm">
                         <thead>
                         <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
-                            <th class="py-3 px-4 text-left whitespace-nowrap">Fecha</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Fecha Entrada</th>
                             <th class="py-3 px-4 text-left whitespace-nowrap">Equipo/Avería</th>
-                            <th class="py-3 px-4 text-left whitespace-nowrap">Técnico</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Técnico Asignado</th>
                             <th class="py-3 px-4 text-left whitespace-nowrap">Estado</th>
                         </tr>
                         </thead>
@@ -166,20 +166,20 @@
             <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-xl text-gray-800 mb-8 flex flex-col md:flex-row gap-4 items-end">
                 <div class="w-full md:w-1/3">
                     <label class="block text-sm font-semibold mb-2">Selecciona un Técnico:</label>
-                    <select id="filtro_tecnico_id" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-400">
+                    <select id="filtro_tecnico_id" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-400 bg-gray-50">
                         <option value="">Todos los técnicos</option>
                     </select>
                 </div>
                 <div class="w-full md:w-1/4">
                     <label class="block text-sm font-semibold mb-2">Desde (Fecha Entrada):</label>
-                    <input type="date" id="filtro_fecha_inicio" class="w-full p-2.5 border rounded">
+                    <input type="date" id="filtro_fecha_inicio" class="w-full p-2.5 border rounded bg-gray-50">
                 </div>
                 <div class="w-full md:w-1/4">
-                    <label class="block text-sm font-semibold mb-2">Hasta:</label>
-                    <input type="date" id="filtro_fecha_fin" class="w-full p-2.5 border rounded">
+                    <label class="block text-sm font-semibold mb-2">Hasta (Fecha):</label>
+                    <input type="date" id="filtro_fecha_fin" class="w-full p-2.5 border rounded bg-gray-50">
                 </div>
-                <div class="w-full md:w-auto">
-                    <button onclick="filtrarHistorialTecnicos()" class="w-full md:w-auto bg-blue-600 text-white px-6 py-2.5 rounded hover:bg-blue-700 transition font-semibold">Filtrar</button>
+                <div class="w-full md:w-auto flex-1">
+                    <button onclick="filtrarHistorialTecnicos()" class="w-full bg-blue-600 text-white px-6 py-2.5 rounded hover:bg-blue-700 transition font-semibold shadow-md">Filtrar Avisos</button>
                 </div>
             </div>
 
@@ -195,10 +195,30 @@
                         </tr>
                         </thead>
                         <tbody id="tabla-historial-tecnico">
-                        <tr><td colspan="4" class="text-center py-6 text-gray-500">Selecciona filtros arriba y pulsa Buscar.</td></tr>
+                        <tr><td colspan="4" class="text-center py-8 text-gray-500">Selecciona filtros arriba y pulsa Filtrar Avisos.</td></tr>
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+
+        <div id="pantalla_recursos" class="pantalla-seccion hidden">
+            <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">Recursos y Enlaces Útiles</h1>
+
+            <p class="text-blue-100 mb-8">Selecciona un recurso para abrirlo en una nueva pestaña:</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <a href="https://infohub.konicaminolta.eu/openmind/publicnav.nsf/nav?OpenForm" target="_blank" class="bg-white p-6 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition duration-300 flex items-start gap-4 group">
+                    <div class="bg-blue-100 text-blue-600 p-3 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition">Infohub Konica Minolta</h3>
+                        <p class="text-sm text-gray-500 mt-1">Portal oficial de documentación y recursos de Konica Minolta.</p>
+                    </div>
+                </a>
+
             </div>
         </div>
 
@@ -209,20 +229,20 @@
     <div class="bg-white text-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-6 mx-4">
         <h2 class="text-xl font-bold mb-4 border-b pb-2 text-blue-600">Registrar Nuevo Cliente</h2>
 
-        <label class="block text-sm mt-3">Nombre <span class="text-red-500">*</span></label>
-        <input type="text" id="nuevo_cliente_nombre" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
+        <label class="block text-sm mt-3 font-semibold">Nombre <span class="text-red-500">*</span></label>
+        <input type="text" id="nuevo_cliente_nombre" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50">
 
-        <label class="block text-sm mt-3">Teléfono</label>
-        <input type="text" id="nuevo_cliente_telefono" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
+        <label class="block text-sm mt-3 font-semibold">Teléfono</label>
+        <input type="text" id="nuevo_cliente_telefono" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50">
 
-        <label class="block text-sm mt-3">Dirección</label>
-        <input type="text" id="nuevo_cliente_direccion" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400" placeholder="Ej: Calle Mayor 1, Madrid">
+        <label class="block text-sm mt-3 font-semibold">Dirección</label>
+        <input type="text" id="nuevo_cliente_direccion" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Ej: Calle Mayor 1, Madrid">
 
         <div class="flex gap-2 mt-6">
-            <button onclick="guardarNuevoCliente()" class="flex-1 bg-green-600 text-white p-2 rounded hover:bg-green-700 transition font-semibold">
+            <button onclick="guardarNuevoCliente()" class="flex-1 bg-green-600 text-white p-2.5 rounded hover:bg-green-700 transition font-semibold shadow">
                 Guardar Cliente
             </button>
-            <button onclick="cerrarModalCliente()" type="button" class="flex-1 bg-gray-200 text-gray-700 p-2 rounded hover:bg-gray-300 transition font-semibold">
+            <button onclick="cerrarModalCliente()" type="button" class="flex-1 bg-gray-200 text-gray-700 p-2.5 rounded hover:bg-gray-300 transition font-semibold shadow">
                 Cancelar
             </button>
         </div>
@@ -230,11 +250,12 @@
 </div>
 
 <script>
+    // --- AUTENTICACIÓN ---
     const token = localStorage.getItem('token');
-    if (!token) window.location.href = 'index.html';
+    if (!token) window.location.href = '/';
 
     let listaClientes = [];
-    let todasLasReparaciones = []; // Almacena todos los avisos para los historiales
+    let todasLasReparaciones = []; // Almacena todos los avisos para los historiales locales
 
     // --- NAVEGACIÓN SPA ---
     function mostrarPantalla(idPantalla, botonClicado) {
@@ -249,7 +270,7 @@
         botonClicado.classList.add('bg-blue-600');
     }
 
-    // --- MANEJO DE FECHA ---
+    // --- MANEJO DE FECHAS ---
     function setFechaHoy() {
         const hoy = new Date().toISOString().split('T')[0];
         document.getElementById('fecha_entrada').value = hoy;
@@ -261,7 +282,7 @@
         try {
             const res = await fetch('/api/clientes', { headers: { 'Authorization': `Bearer ${token}` } });
             if (res.ok) listaClientes = await res.json();
-        } catch (error) { console.error(error); }
+        } catch (error) { console.error("Error cargando clientes:", error); }
     }
 
     async function cargarTecnicos() {
@@ -276,7 +297,7 @@
                     selectFiltro.innerHTML += `<option value="${t.id}">${t.nombre}</option>`;
                 });
             }
-        } catch (error) { console.error(error); }
+        } catch (error) { console.error("Error cargando técnicos:", error); }
     }
 
     async function cargarMarcas() {
@@ -287,7 +308,7 @@
                 const select = document.getElementById('marca_id');
                 marcas.forEach(m => select.innerHTML += `<option value="${m.id}">${m.nombre}</option>`);
             }
-        } catch (error) { console.error(error); }
+        } catch (error) { console.error("Error cargando marcas:", error); }
     }
 
     // --- BUSCADOR REUTILIZABLE DE CLIENTES ---
@@ -307,12 +328,15 @@
         );
 
         if (filtrados.length === 0) {
-            dropdown.innerHTML = '<li class="p-3 text-gray-500 text-sm">No se encontraron coincidencias...</li>';
+            dropdown.innerHTML = '<li class="p-3 text-gray-500 text-sm italic">No se encontraron coincidencias...</li>';
         } else {
             filtrados.forEach(c => {
                 const li = document.createElement('li');
-                li.className = 'p-3 hover:bg-blue-50 cursor-pointer border-b text-gray-700 transition';
-                li.innerHTML = `<div class="font-semibold">${c.nombre}</div><div class="text-xs text-gray-500">${c.telefono || 'Sin teléfono'}</div>`;
+                li.className = 'p-3 hover:bg-blue-50 cursor-pointer border-b text-gray-800 transition flex justify-between items-center';
+                li.innerHTML = `
+                    <div><div class="font-semibold">${c.nombre}</div><div class="text-xs text-gray-500">${c.telefono || 'Sin teléfono'}</div></div>
+                    <div class="text-blue-500 text-lg">›</div>
+                `;
                 li.onclick = () => {
                     document.getElementById(inputId).value = c.nombre;
                     dropdown.classList.add('hidden');
@@ -324,14 +348,18 @@
         dropdown.classList.remove('hidden');
     }
 
-    // Función al seleccionar cliente en "Nueva Reparación"
+    // Acción: Cliente seleccionado para nueva reparación
     function seleccionarClienteReparacion(cliente) {
         document.getElementById('cliente_id').value = cliente.id;
 
         const infoDiv = document.getElementById('cliente_info');
         infoDiv.innerHTML = `
-            <p>📞 <strong>Teléfono:</strong> ${cliente.telefono || 'No especificado'}</p>
-            <p>🏠 <strong>Dirección:</strong> ${cliente.direccion || 'No especificada'}</p>
+            <div class="flex justify-between">
+                <div>
+                    <p>📞 <strong>Teléfono:</strong> ${cliente.telefono || 'No especificado'}</p>
+                    <p>🏠 <strong>Dirección:</strong> ${cliente.direccion || 'No especificada'}</p>
+                </div>
+            </div>
         `;
         infoDiv.classList.remove('hidden');
 
@@ -342,9 +370,9 @@
         }
     }
 
-    // Función al seleccionar cliente en "Historial"
+    // Acción: Cliente seleccionado para ver historial
     function cargarHistorialCliente(cliente) {
-        document.getElementById('titulo_historial_cliente').innerText = `Avisos de: ${cliente.nombre} - ${cliente.telefono || ''}`;
+        document.getElementById('titulo_historial_cliente').innerText = `Avisos de: ${cliente.nombre} ${cliente.telefono ? ' - '+cliente.telefono : ''}`;
         const tbody = document.getElementById('tabla-historial-cliente');
         tbody.innerHTML = '';
 
@@ -359,7 +387,7 @@
 
                 tbody.innerHTML += `
                 <tr class="border-b hover:bg-gray-50">
-                    <td class="py-3 px-4 font-mono text-xs text-blue-600">${fecha}</td>
+                    <td class="py-3 px-4 font-mono text-xs text-blue-600 whitespace-nowrap">${fecha}</td>
                     <td class="py-3 px-4"><strong>${rep.marca?.nombre || 'N/A'}</strong><br><span class="text-xs text-gray-500">${rep.descripcion || ''}</span></td>
                     <td class="py-3 px-4 text-sm">${rep.tecnico?.nombre || 'N/A'}</td>
                     <td class="py-3 px-4 font-semibold uppercase text-xs ${color}">${rep.estado}</td>
@@ -369,7 +397,7 @@
         document.getElementById('contenedor_historial_cliente').classList.remove('hidden');
     }
 
-    // --- HISTORIAL TÉCNICOS ---
+    // Acción: Filtrar técnicos
     function filtrarHistorialTecnicos() {
         const tecId = document.getElementById('filtro_tecnico_id').value;
         const fechaInicio = document.getElementById('filtro_fecha_inicio').value;
@@ -379,15 +407,15 @@
 
         let filtrados = todasLasReparaciones;
 
-        if (tecId) filtrados = filtrados.filter(rep => rep.tecnico_id == tecId);
-
+        if (tecId) {
+            filtrados = filtrados.filter(rep => rep.tecnico_id == tecId);
+        }
         if (fechaInicio) {
             filtrados = filtrados.filter(rep => {
                 let fecha = rep.fecha_entrada || rep.created_at?.substring(0,10);
                 return fecha && fecha >= fechaInicio;
             });
         }
-
         if (fechaFin) {
             filtrados = filtrados.filter(rep => {
                 let fecha = rep.fecha_entrada || rep.created_at?.substring(0,10);
@@ -404,15 +432,15 @@
             let fecha = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'Desconocida');
             tbody.innerHTML += `
             <tr class="border-b hover:bg-gray-50">
-                <td class="py-3 px-4 font-mono text-xs text-blue-600">${fecha}</td>
+                <td class="py-3 px-4 font-mono text-xs text-blue-600 whitespace-nowrap">${fecha}</td>
                 <td class="py-3 px-4 font-semibold text-gray-700">${rep.tecnico?.nombre || 'N/A'}</td>
-                <td class="py-3 px-4 text-sm">${rep.cliente?.nombre || 'S/N'}</td>
-                <td class="py-3 px-4 text-xs text-gray-500">${rep.descripcion || ''}</td>
+                <td class="py-3 px-4 text-sm font-medium text-gray-900">${rep.cliente?.nombre || 'S/N'}</td>
+                <td class="py-3 px-4 text-xs text-gray-500 max-w-xs truncate" title="${rep.descripcion || ''}">${rep.descripcion || ''}</td>
             </tr>`;
         });
     }
 
-    // Ocultar desplegables al hacer clic fuera
+    // Ocultar desplegables si haces click fuera de ellos
     document.addEventListener('click', function(e) {
         ['cliente_dropdown', 'historial_cliente_dropdown'].forEach(id => {
             const el = document.getElementById(id);
@@ -422,7 +450,7 @@
         });
     });
 
-    // --- MAPA ---
+    // --- MAPA DINÁMICO ---
     function mostrarMapaDeTabla(direccionCodificada) {
         const mapContainer = document.getElementById('mapa_container');
         const iframe = document.getElementById('google_map_iframe');
@@ -435,22 +463,21 @@
         mapContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // --- CRUD REPARACIONES ---
+    // --- CRUD DE REPARACIONES ---
     async function cargarReparaciones() {
         try {
             const res = await fetch('/api/reparaciones', { headers: { 'Authorization': `Bearer ${token}` } });
             if (!res.ok) throw new Error('Error al cargar reparaciones');
             const data = await res.json();
-            todasLasReparaciones = data; // Guardamos en memoria global
+
+            // Guardamos en variable global y ordenamos de más nuevas a más viejas
+            todasLasReparaciones = data.sort((a,b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id));
 
             const tbody = document.getElementById('tabla-reparaciones');
             tbody.innerHTML = '';
             let pendientes = 0, proceso = 0, terminado = 0;
 
-            // Ordenamos para que las más nuevas salgan arriba
-            data.sort((a,b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id));
-
-            data.forEach(rep => {
+            todasLasReparaciones.forEach(rep => {
                 if (rep.estado === 'pendiente') pendientes++;
                 if (rep.estado === 'en proceso') proceso++;
                 if (rep.estado === 'terminado') terminado++;
@@ -461,31 +488,32 @@
                     terminado: 'bg-green-100 text-green-700'
                 }[rep.estado] || 'bg-gray-100 text-gray-700';
 
-                const repJSON = JSON.stringify(rep).replace(/"/g, '&quot;');
+                // Codificamos el JSON para poder inyectarlo en el HTML del botón sin romper las comillas
+                const repJSON = JSON.stringify(rep).replace(/"/g, '"');
                 let fechaFormateada = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
 
                 let btnMapa = '';
                 if (rep.cliente && rep.cliente.direccion) {
-                    btnMapa = `<button type="button" onclick="mostrarMapaDeTabla('${encodeURIComponent(rep.cliente.direccion)}')" class="text-green-500 hover:text-green-700 p-2" title="Ver en mapa">📍</button>`;
+                    btnMapa = `<button type="button" onclick="mostrarMapaDeTabla('${encodeURIComponent(rep.cliente.direccion)}')" class="text-green-600 hover:text-green-800 p-2 transition hover:scale-125 inline-block" title="Ver en mapa">📍</button>`;
                 }
 
                 tbody.innerHTML += `
                 <tr class="border-b hover:bg-gray-50 transition">
                     <td class="py-4 px-4 whitespace-nowrap">
-                        <div class="font-bold text-blue-600">#${rep.id}</div>
+                        <div class="font-bold text-blue-600 text-base">#${rep.id}</div>
                         <div class="text-gray-500 text-xs mt-1">📅 ${fechaFormateada}</div>
                     </td>
                     <td class="py-4 px-4 min-w-[200px]">
-                        <div class="font-medium">${rep.cliente?.nombre || 'S/N'}</div>
+                        <div class="font-medium text-gray-900">${rep.cliente?.nombre || 'S/N'}</div>
                         <div class="text-gray-500 text-xs mt-1">${rep.marca?.nombre || 'S/N'}</div>
                     </td>
                     <td class="py-4 px-4 whitespace-nowrap">
-                        <span class="px-2 py-1 rounded-full text-xs font-semibold ${color}">${rep.estado}</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${color}">${rep.estado}</span>
                     </td>
-                    <td class="py-4 px-4 text-center space-x-1 whitespace-nowrap">
+                    <td class="py-4 px-4 text-center whitespace-nowrap align-middle">
                         ${btnMapa}
-                        <button onclick="editarReparacion('${repJSON}')" class="text-blue-500 hover:text-blue-700 p-2" title="Editar">✏️</button>
-                        <button onclick="borrarReparacion(${rep.id})" class="text-red-500 hover:text-red-700 p-2" title="Borrar">🗑️</button>
+                        <button onclick="editarReparacion('${repJSON}')" class="text-blue-500 hover:text-blue-700 p-2 transition hover:scale-125 inline-block" title="Editar">✏️</button>
+                        <button onclick="borrarReparacion(${rep.id})" class="text-red-500 hover:text-red-700 p-2 transition hover:scale-125 inline-block" title="Borrar">🗑️</button>
                     </td>
                 </tr>
                 `;
@@ -494,6 +522,10 @@
             document.getElementById('stat-pendientes').innerText = pendientes;
             document.getElementById('stat-proceso').innerText = proceso;
             document.getElementById('stat-terminado').innerText = terminado;
+
+            // Refrescar el filtro de técnicos por si estábamos en esa pantalla
+            filtrarHistorialTecnicos();
+
         } catch (error) { console.error(error); }
     }
 
@@ -508,8 +540,8 @@
             estado: document.getElementById('estado').value
         };
 
-        if (!datos.cliente_id || !datos.tecnico_id || !datos.marca_id) {
-            alert('Por favor, selecciona Cliente, Técnico y Marca.');
+        if (!datos.cliente_id || !datos.tecnico_id || !datos.marca_id || !datos.fecha_entrada) {
+            alert('Faltan datos. Revisa Cliente, Técnico, Marca y Fecha.');
             return;
         }
 
@@ -524,13 +556,13 @@
             if (res.ok) {
                 limpiarFormulario();
                 cargarReparaciones();
-            } else alert('Error al guardar la reparación');
+            } else alert('Error al guardar la reparación en la base de datos.');
         } catch (error) { console.error(error); }
     }
 
     function editarReparacion(repJSON) {
-        // Restaurar comillas para parsear el JSON
-        const decodedJSON = repJSON.replace(/&quot;/g, '"');
+        // Descodificamos el JSON
+        const decodedJSON = repJSON.replace(/"/g, '"');
         const rep = JSON.parse(decodedJSON);
 
         document.getElementById('form-title').innerText = 'Editar Reparación #' + rep.id;
@@ -553,7 +585,7 @@
     }
 
     async function borrarReparacion(id) {
-        if (!confirm('¿Estás seguro de que deseas borrar este aviso?')) return;
+        if (!confirm('¿Estás seguro de que deseas borrar este aviso permanentemente?')) return;
         try {
             const res = await fetch(`/api/reparaciones/${id}`, {
                 method: 'DELETE',
@@ -578,7 +610,7 @@
         setFechaHoy(); // Restablece a la fecha de hoy
     }
 
-    // --- MODAL CLIENTES ---
+    // --- MODAL DE CLIENTES ---
     function abrirModalCliente() {
         document.getElementById('nuevo_cliente_nombre').value = document.getElementById('cliente_search').value;
         document.getElementById('nuevo_cliente_telefono').value = '';
@@ -609,20 +641,21 @@
 
             if (res.ok) {
                 const nuevoCliente = await res.json();
-                await cargarClientes();
+                await cargarClientes(); // Refrescar el array de clientes
                 cerrarModalCliente();
                 seleccionarClienteReparacion(nuevoCliente.id ? nuevoCliente : nuevoCliente.cliente);
-            } else alert('Error al crear el cliente');
+            } else alert('Error al registrar el cliente en el servidor.');
         } catch (error) { console.error(error); alert('Error de conexión'); }
         finally { btn.innerText = 'Guardar Cliente'; btn.disabled = false; }
     }
 
+    // --- CERRAR SESIÓN ---
     function logout() {
         localStorage.removeItem('token');
         window.location.href = '/';
     }
 
-    // --- ARRANQUE ---
+    // --- ARRANQUE AL CARGAR LA WEB ---
     cargarClientes();
     cargarTecnicos();
     cargarMarcas();
