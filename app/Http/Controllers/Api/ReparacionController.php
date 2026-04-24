@@ -9,11 +9,21 @@ use Illuminate\Http\Request;
 class ReparacionController extends Controller
 {
     /**
-     * GET: Listo todas las reparaciones con sus relaciones.
+     * GET: Listo todas las reparaciones con sus relaciones (FILTRADO POR ROL).
      */
     public function index()
     {
-        // Uso eager loading (with) para traer los nombres de marca, tecnico y cliente
+        // Obtenemos al usuario que está haciendo la petición gracias al Token
+        $user = auth()->user();
+
+        // Si el usuario tiene rol de técnico, filtramos la consulta
+        if ($user->rol === 'tecnico') {
+            return Reparacion::with(['marca', 'tecnico', 'cliente'])
+                ->where('tecnico_id', $user->tecnico_id)
+                ->get();
+        }
+
+        // Si es admin (o cualquier otro), devolvemos todo sin el 'where'
         return Reparacion::with(['marca', 'tecnico', 'cliente'])->get();
     }
 
@@ -22,6 +32,13 @@ class ReparacionController extends Controller
      */
     public function store(Request $request)
     {
+        // Validación de seguridad (opcional pero recomendada):
+        // Si quieres que los técnicos NO puedan crear avisos para otros, añade esto:
+        $user = auth()->user();
+        if ($user->rol === 'tecnico' && $request->tecnico_id != $user->tecnico_id) {
+            return response()->json(['error' => 'No tienes permiso para asignar avisos a otros técnicos.'], 403);
+        }
+
         // Validamos que los IDs enviados existan en sus respectivas tablas
         $request->validate([
             'marca_id'    => 'required|exists:marcas,id',
@@ -40,11 +57,19 @@ class ReparacionController extends Controller
     }
 
     /**
-     * GET {id}: Con esto creo una reparación específica.
+     * GET {id}: Obtengo una reparación específica.
      */
     public function show($id)
     {
-        return Reparacion::with(['marca', 'tecnico', 'cliente'])->findOrFail($id);
+        $user = auth()->user();
+        $reparacion = Reparacion::with(['marca', 'tecnico', 'cliente'])->findOrFail($id);
+
+        // SEGURIDAD: Comprobamos si es técnico y si el aviso le pertenece
+        if ($user->rol === 'tecnico' && $reparacion->tecnico_id !== $user->tecnico_id) {
+            return response()->json(['error' => 'No tienes permiso para ver este aviso.'], 403);
+        }
+
+        return $reparacion;
     }
 
     /**
@@ -52,7 +77,13 @@ class ReparacionController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $user = auth()->user();
         $reparacion = Reparacion::findOrFail($id);
+
+        // SEGURIDAD: Comprobamos si es técnico y si el aviso le pertenece antes de dejarle actualizar
+        if ($user->rol === 'tecnico' && $reparacion->tecnico_id !== $user->tecnico_id) {
+            return response()->json(['error' => 'No tienes permiso para editar este aviso.'], 403);
+        }
 
         // Validamos también al actualizar para evitar datos corruptos
         $request->validate([
@@ -72,7 +103,15 @@ class ReparacionController extends Controller
      */
     public function destroy($id)
     {
+        $user = auth()->user();
         $reparacion = Reparacion::findOrFail($id);
+
+        // SEGURIDAD: Comprobamos si es técnico y si el aviso le pertenece antes de dejarle borrar
+        // Incluso podrías quitar esta opción y que SOLO los admin puedan borrar (quitando la segunda condición del if)
+        if ($user->rol === 'tecnico' && $reparacion->tecnico_id !== $user->tecnico_id) {
+            return response()->json(['error' => 'No tienes permiso para borrar este aviso.'], 403);
+        }
+
         $reparacion->delete();
 
         // Devolvemos un 204 (No Content) o un mensaje de éxito
