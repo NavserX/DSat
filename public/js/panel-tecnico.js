@@ -1,12 +1,15 @@
 // --- AUTENTICACIÓN ---
+// Saco el token del almacenamiento, si no existe te expulso al login
 const token = localStorage.getItem('token');
 if (!token) window.location.href = '/';
 
+// Guardo estas variables globales para usarlas en todo el código
 let listaClientes = [];
-let todasLasReparaciones = []; // Almacena todos los avisos para los historiales locales
-let usuarioActual = null; // Guardará los datos del usuario logueado
+let todasLasReparaciones = [];
+let usuarioActual = null;
 
-// --- CARGA DE PERFIL (PASO 6) ---
+// --- CARGA DE PERFIL ---
+// Pido los datos del usuario logueado al servidor
 async function cargarPerfilUsuario() {
     try {
         const res = await fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } });
@@ -17,15 +20,14 @@ async function cargarPerfilUsuario() {
     } catch (error) { console.error("Error cargando perfil", error); }
 }
 
+// Oculto menús y botones si el que entra es un técnico
 function adaptarInterfazAlRol() {
     if (usuarioActual && usuarioActual.rol === 'tecnico') {
-        // 1. Ocultar menús de historiales globales
         const btnClientes = document.getElementById('btn-menu-clientes');
         const btnTecnicos = document.getElementById('btn-menu-tecnicos');
         if (btnClientes) btnClientes.classList.add('hidden');
         if (btnTecnicos) btnTecnicos.classList.add('hidden');
 
-        // 2. Ocultar el formulario por defecto y expandir la tabla a todo el ancho
         const cajaFormulario = document.getElementById('caja-formulario-reparacion');
         const cajaTabla = document.getElementById('caja-tabla-reparaciones');
 
@@ -35,11 +37,9 @@ function adaptarInterfazAlRol() {
             cajaTabla.classList.add('col-span-1', 'lg:col-span-3');
         }
 
-        // 3. Bloquear campos sensibles en el formulario para cuando se abra en modo edición
         document.getElementById('cliente_search').disabled = true;
         document.getElementById('tecnico_id').disabled = true;
 
-        // Ocultar botones de "Nuevo Cliente" y "Limpiar"
         const btnNuevoCliente = document.querySelector('button[onclick="abrirModalCliente()"]');
         if (btnNuevoCliente) btnNuevoCliente.classList.add('hidden');
 
@@ -49,6 +49,7 @@ function adaptarInterfazAlRol() {
 }
 
 // --- NAVEGACIÓN SPA ---
+// Oculto todas las pantallas y muestro solo la que has seleccionado
 function mostrarPantalla(idPantalla, botonClicado) {
     document.querySelectorAll('.pantalla-seccion').forEach(div => div.classList.add('hidden'));
     document.getElementById(idPantalla).classList.remove('hidden');
@@ -62,6 +63,7 @@ function mostrarPantalla(idPantalla, botonClicado) {
 }
 
 // --- MANEJO DE FECHAS ---
+// Pongo la fecha de hoy por defecto en el formulario
 function setFechaHoy() {
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('fecha_entrada').value = hoy;
@@ -69,6 +71,7 @@ function setFechaHoy() {
 setFechaHoy();
 
 // --- CARGAS INICIALES DE API ---
+// Me traigo todos los clientes de la base de datos
 async function cargarClientes() {
     try {
         const res = await fetch('/api/clientes', { headers: { 'Authorization': `Bearer ${token}` } });
@@ -76,6 +79,7 @@ async function cargarClientes() {
     } catch (error) { console.error("Error cargando clientes:", error); }
 }
 
+// Me traigo todos los técnicos para rellenar los desplegables
 async function cargarTecnicos() {
     try {
         const res = await fetch('/api/tecnicos', { headers: { 'Authorization': `Bearer ${token}` } });
@@ -91,6 +95,7 @@ async function cargarTecnicos() {
     } catch (error) { console.error("Error cargando técnicos:", error); }
 }
 
+// Me traigo todas las marcas de las máquinas
 async function cargarMarcas() {
     try {
         const res = await fetch('/api/marcas', { headers: { 'Authorization': `Bearer ${token}` } });
@@ -103,6 +108,7 @@ async function cargarMarcas() {
 }
 
 // --- BUSCADOR REUTILIZABLE DE CLIENTES ---
+// Filtro la lista de clientes mientras vas escribiendo
 function filtrarClientes(inputId, dropdownId, callbackSeleccion) {
     const query = document.getElementById(inputId).value.toLowerCase();
     const dropdown = document.getElementById(dropdownId);
@@ -139,7 +145,7 @@ function filtrarClientes(inputId, dropdownId, callbackSeleccion) {
     dropdown.classList.remove('hidden');
 }
 
-// Acción: Cliente seleccionado para nueva reparación
+// Relleno los datos del cliente abajo al seleccionarlo en una nueva reparación
 function seleccionarClienteReparacion(cliente) {
     document.getElementById('cliente_id').value = cliente.id;
 
@@ -170,7 +176,7 @@ function seleccionarClienteReparacion(cliente) {
     }
 }
 
-// Acción: Cliente seleccionado para ver historial
+// Cargo el historial de reparaciones de un cliente en la pantalla de clientes
 function cargarHistorialCliente(cliente) {
     document.getElementById('titulo_historial_cliente').innerText = `Avisos de: ${cliente.nombre} ${cliente.telefono ? ' - '+cliente.telefono : ''}`;
     const tbody = document.getElementById('tabla-historial-cliente');
@@ -197,7 +203,7 @@ function cargarHistorialCliente(cliente) {
     document.getElementById('contenedor_historial_cliente').classList.remove('hidden');
 }
 
-// Acción: Filtrar técnicos
+// Filtro la tabla de los técnicos según los campos seleccionados arriba
 function filtrarHistorialTecnicos() {
     const tecId = document.getElementById('filtro_tecnico_id').value;
     const fechaInicio = document.getElementById('filtro_fecha_inicio').value;
@@ -240,6 +246,7 @@ function filtrarHistorialTecnicos() {
     });
 }
 
+// Oculto los desplegables de búsqueda de clientes si pinchas fuera de ellos
 document.addEventListener('click', function(e) {
     ['cliente_dropdown', 'historial_cliente_dropdown'].forEach(id => {
         const el = document.getElementById(id);
@@ -250,6 +257,7 @@ document.addEventListener('click', function(e) {
 });
 
 // --- MAPA DINÁMICO ---
+// Muestro el mapa de google con la dirección del cliente codificada
 function mostrarMapaDeTabla(direccionCodificada) {
     const mapContainer = document.getElementById('mapa_container');
     const iframe = document.getElementById('google_map_iframe');
@@ -263,12 +271,11 @@ function mostrarMapaDeTabla(direccionCodificada) {
 }
 
 // --- ACCIÓN RÁPIDA DE ESTADO ---
+// Cambio el estado a en proceso o terminado directamente desde el botón de la tabla
 async function cambiarEstadoRapido(id, nuevoEstado) {
-    // Buscamos la reparación entera en nuestra variable global
     const rep = todasLasReparaciones.find(r => r.id === id);
     if (!rep) return;
 
-    // Mantenemos todos los datos igual, solo cambiamos el estado
     const datos = {
         cliente_id: rep.cliente_id,
         tecnico_id: rep.tecnico_id,
@@ -286,15 +293,21 @@ async function cambiarEstadoRapido(id, nuevoEstado) {
         });
 
         if (res.ok) {
-            cargarReparaciones(); // Recargamos la tabla al instante para reflejar el cambio
+            cargarReparaciones();
         } else {
             alert('Error al actualizar el estado.');
         }
     } catch (error) { console.error(error); }
 }
 
-// --- CRUD DE REPARACIONES ---
+// --- CRUD DE REPARACIONES (CON AUTO-REFRESCO) ---
+// Pido las reparaciones al servidor y dibujo la tabla principal
 async function cargarReparaciones() {
+    // Si el usuario está editando o escribiendo en el formulario no actualizo la tabla para no molestar
+    const editandoId = document.getElementById('rep-id').value;
+    const escribiendoDesc = document.getElementById('descripcion').value;
+    if (editandoId || escribiendoDesc.length > 0) return;
+
     try {
         const res = await fetch('/api/reparaciones', { headers: { 'Authorization': `Bearer ${token}` } });
         if (!res.ok) throw new Error('Error al cargar reparaciones');
@@ -317,7 +330,8 @@ async function cargarReparaciones() {
                 terminado: 'bg-green-100 text-green-700'
             }[rep.estado] || 'bg-gray-100 text-gray-700';
 
-            const repJSON = JSON.stringify(rep).replace(/"/g, '"');
+            // Codifico la reparación entera para que no rompa el botón con saltos de línea o comillas
+            const repCodificada = encodeURIComponent(JSON.stringify(rep));
             let fechaFormateada = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
 
             let btnMapa = '';
@@ -330,14 +344,11 @@ async function cargarReparaciones() {
                 btnLlamar = `<a href="tel:${rep.cliente.telefono}" class="text-blue-500 hover:text-blue-800 p-2 transition hover:scale-125 inline-block" title="Llamar al cliente">📞</a>`;
             }
 
-            // --- LÓGICA DE BOTONES PARA TÉCNICOS ---
             let btnBorrar = `<button onclick="borrarReparacion(${rep.id})" class="text-red-500 hover:text-red-700 p-2 transition hover:scale-125 inline-block" title="Borrar">🗑️</button>`;
             let btnEstadoRapido = '';
 
             if (usuarioActual && usuarioActual.rol === 'tecnico') {
-                btnBorrar = ''; // Los técnicos no pueden borrar
-
-                // Generamos un botón de acción rápida basado en el estado
+                btnBorrar = '';
                 if (rep.estado === 'pendiente') {
                     btnEstadoRapido = `<button onclick="cambiarEstadoRapido(${rep.id}, 'en proceso')" class="text-yellow-500 hover:text-yellow-700 p-2 transition hover:scale-125 inline-block" title="Empezar a trabajar">▶️</button>`;
                 } else if (rep.estado === 'en proceso') {
@@ -362,11 +373,10 @@ async function cargarReparaciones() {
                     ${btnEstadoRapido}
                     ${btnLlamar}
                     ${btnMapa}
-                    <button onclick="editarReparacion('${repJSON}')" class="text-blue-500 hover:text-blue-700 p-2 transition hover:scale-125 inline-block" title="Editar">✏️</button>
+                    <button onclick="editarReparacion('${repCodificada}')" class="text-blue-500 hover:text-blue-700 p-2 transition hover:scale-125 inline-block" title="Editar">✏️</button>
                     ${btnBorrar}
                 </td>
             </tr>
-
             <tr class="border-b hover:bg-blue-50/30 transition">
                 <td colspan="4" class="px-4 pb-4 pt-1">
                     <div class="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-200 shadow-sm w-full">
@@ -374,19 +384,28 @@ async function cargarReparaciones() {
                         ${rep.descripcion ? rep.descripcion.replace(/\n/g, '<br>') : '<span class="italic text-gray-400">Sin descripción detallada...</span>'}
                     </div>
                 </td>
-            </tr>
-            `;
+            </tr>`;
         });
 
         document.getElementById('stat-pendientes').innerText = pendientes;
         document.getElementById('stat-proceso').innerText = proceso;
         document.getElementById('stat-terminado').innerText = terminado;
 
-        filtrarHistorialTecnicos();
+        // Compruebo que no haya otro temporizador y refresco la tabla cada 10 segundos
+        if (!window.intervaloRealTime) {
+            window.intervaloRealTime = setInterval(() => {
+                const pantallaReparaciones = document.getElementById('pantalla_reparaciones');
+                if (pantallaReparaciones && !pantallaReparaciones.classList.contains('hidden')) {
+                    cargarReparaciones();
+                }
+            }, 10000);
+        }
 
+        filtrarHistorialTecnicos();
     } catch (error) { console.error(error); }
 }
 
+// Guardo la reparación enviando los datos del formulario a la API
 async function guardarReparacion() {
     const id = document.getElementById('rep-id').value;
     const datos = {
@@ -413,24 +432,20 @@ async function guardarReparacion() {
 
         if (res.ok) {
             limpiarFormulario();
-
-            // Si es técnico, volvemos a ocultar el formulario tras guardar
             if (usuarioActual && usuarioActual.rol === 'tecnico') {
                 document.getElementById('caja-formulario-reparacion').classList.add('hidden');
                 document.getElementById('caja-tabla-reparaciones').classList.remove('lg:col-span-2');
                 document.getElementById('caja-tabla-reparaciones').classList.add('col-span-1', 'lg:col-span-3');
             }
-
             cargarReparaciones();
         } else alert('Error al guardar la reparación en la base de datos.');
     } catch (error) { console.error(error); }
 }
 
-function editarReparacion(repJSON) {
-    const decodedJSON = repJSON.replace(/"/g, '"');
-    const rep = JSON.parse(decodedJSON);
+// Descodifico los datos seguros que pasé al botón del lápiz y relleno el formulario
+function editarReparacion(repCodificada) {
+    const rep = JSON.parse(decodeURIComponent(repCodificada));
 
-    // Si es un técnico, al pulsar "Editar" desocultamos el formulario para que pueda trabajar
     if (usuarioActual && usuarioActual.rol === 'tecnico') {
         const cajaForm = document.getElementById('caja-formulario-reparacion');
         const cajaTabla = document.getElementById('caja-tabla-reparaciones');
@@ -460,6 +475,7 @@ function editarReparacion(repJSON) {
     document.getElementById('form-title').scrollIntoView({ behavior: 'smooth' });
 }
 
+// Elimino la reparación tras preguntar por confirmación
 async function borrarReparacion(id) {
     if (!confirm('¿Estás seguro de que deseas borrar este aviso permanentemente?')) return;
     try {
@@ -472,6 +488,7 @@ async function borrarReparacion(id) {
     } catch (error) { console.error(error); }
 }
 
+// Dejo los campos vacíos y oculto el mapa para dejarlo todo listo para uno nuevo
 function limpiarFormulario() {
     document.getElementById('form-title').innerText = 'Nueva Reparación';
     document.getElementById('rep-id').value = '';
@@ -480,7 +497,6 @@ function limpiarFormulario() {
     document.getElementById('cliente_info').classList.add('hidden');
     document.getElementById('mapa_container').classList.add('hidden');
 
-    // Si no es técnico, permitimos vaciar el técnico. Si es técnico, se queda bloqueado con el suyo
     if (!usuarioActual || usuarioActual.rol !== 'tecnico') {
         document.getElementById('tecnico_id').value = '';
     }
@@ -492,21 +508,30 @@ function limpiarFormulario() {
 }
 
 // --- MODAL DE CLIENTES ---
+// Abro el formulario flotante y limpio los campos (incluido el nuevo email)
 function abrirModalCliente() {
     document.getElementById('nuevo_cliente_nombre').value = document.getElementById('cliente_search').value;
+    const emailInput = document.getElementById('nuevo_cliente_email');
+    if (emailInput) emailInput.value = '';
     document.getElementById('nuevo_cliente_telefono').value = '';
     document.getElementById('nuevo_cliente_direccion').value = '';
     document.getElementById('modal_cliente').classList.remove('hidden');
 }
 
+// Cierro la ventana flotante
 function cerrarModalCliente() {
     document.getElementById('modal_cliente').classList.add('hidden');
 }
 
+// Mando el cliente a la base de datos (con email falso si es necesario) y lo selecciono
 async function guardarNuevoCliente() {
     const nombre = document.getElementById('nuevo_cliente_nombre').value;
     const telefono = document.getElementById('nuevo_cliente_telefono').value;
     const direccion = document.getElementById('nuevo_cliente_direccion').value;
+
+    // Recojo el email. Si no lo rellenan, creo uno falso para que MySQL no dé error
+    const inputEmail = document.getElementById('nuevo_cliente_email');
+    const email = (inputEmail && inputEmail.value) ? inputEmail.value : `sin-email-${Date.now()}@cliente.com`;
 
     if (!nombre) return alert("El nombre es obligatorio.");
 
@@ -517,7 +542,7 @@ async function guardarNuevoCliente() {
         const res = await fetch('/api/clientes', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ nombre, telefono, direccion })
+            body: JSON.stringify({ nombre, telefono, direccion, email })
         });
 
         if (res.ok) {
@@ -525,26 +550,27 @@ async function guardarNuevoCliente() {
             await cargarClientes();
             cerrarModalCliente();
             seleccionarClienteReparacion(nuevoCliente.id ? nuevoCliente : nuevoCliente.cliente);
+            document.getElementById('cliente_search').value = nombre;
         } else alert('Error al registrar el cliente en el servidor.');
     } catch (error) { console.error(error); alert('Error de conexión'); }
     finally { btn.innerText = 'Guardar Cliente'; btn.disabled = false; }
 }
 
 // --- CERRAR SESIÓN ---
+// Elimino el token del navegador y devuelvo al usuario al login
 function logout() {
     localStorage.removeItem('token');
     window.location.href = '/';
 }
 
 // --- ARRANQUE AL CARGAR LA WEB ---
+// Inicio todo trayendo la información necesaria de la base de datos
 async function iniciarApp() {
-    await cargarPerfilUsuario(); // Espero a saber quién es antes de pintar nada
-
+    await cargarPerfilUsuario();
     cargarClientes();
     cargarTecnicos();
     cargarMarcas();
     cargarReparaciones();
 }
 
-// Arrancamos la aplicación
 iniciarApp();

@@ -4,14 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Soluciones - Gestión Técnica</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://kit.fontawesome.com/6b6f3e3b2a.js" crossorigin="anonymous"></script>
 
     <style>
+        /* Creo una clase llamada fade-in que hace que una animación dure 0.7 segundos */
         .fade-in {
             animation: fadeIn 0.7s ease-in-out;
         }
 
+        /* Defino qué hace esa animación: aparece de la nada (opacity 0) y sube un poquito hacia su sitio */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
@@ -82,8 +85,7 @@
             Iniciar Sesión
         </button>
 
-        <p id="error"
-           class="text-red-500 text-sm mt-4 text-center font-medium"></p>
+        <p id="error" class="text-red-500 text-sm mt-4 text-center font-medium"></p>
 
         <div class="text-center text-xs text-gray-400 mt-6">
             © 2026 Digital SAT - Sistema interno
@@ -93,34 +95,7 @@
 
 </div>
 
-<script>
-    async function login() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-
-        try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                localStorage.setItem('token', data.access_token);
-                window.location.href = '/dashboard';
-            } else {
-                document.getElementById('error').innerText =
-                    data.message || 'Credenciales incorrectas';
-            }
-
-        } catch (error) {
-            document.getElementById('error').innerText =
-                'No se puede conectar con el servidor';
-        }
-    }
-</script>
+<script src="{{ asset('js/login.js') }}"></script>
 
 </body>
 </html>

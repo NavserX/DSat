@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Soluciones - Panel Técnico</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
 </head>
@@ -13,6 +14,7 @@
 <div class="flex flex-col lg:flex-row min-h-screen">
 
     <aside class="w-full lg:w-64 bg-slate-950/60 backdrop-blur-lg p-4 lg:p-6 flex flex-col shrink-0">
+
         <div class="mb-4 lg:mb-10 flex flex-row lg:flex-col items-center lg:items-start justify-between">
             <div class="flex items-center lg:flex-col lg:items-start">
                 <img src="{{ asset('img/logo-web-ofimatica-digital2.webp') }}" class="w-32 lg:w-40 mr-4 lg:mr-0 lg:mb-4" alt="Logo" onerror="this.style.display='none'">
@@ -211,7 +213,6 @@
             <p class="text-blue-100 mb-8">Selecciona un recurso para abrirlo en una nueva pestaña:</p>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
                 <a href="https://infohub.konicaminolta.eu/openmind/publicnav.nsf/nav?OpenForm" target="_blank" class="bg-white p-6 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition duration-300 flex items-start gap-4 group">
                     <div class="bg-blue-100 text-blue-600 p-3 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
@@ -221,7 +222,6 @@
                         <p class="text-sm text-gray-500 mt-1">Portal oficial de documentación y recursos de Konica Minolta.</p>
                     </div>
                 </a>
-
             </div>
         </div>
 
@@ -234,6 +234,9 @@
 
         <label class="block text-sm mt-3 font-semibold">Nombre <span class="text-red-500">*</span></label>
         <input type="text" id="nuevo_cliente_nombre" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50">
+
+        <label class="block text-sm mt-3 font-semibold">Email <span class="text-red-500">*</span></label>
+        <input type="email" id="nuevo_cliente_email" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="correo@ejemplo.com">
 
         <label class="block text-sm mt-3 font-semibold">Teléfono</label>
         <input type="text" id="nuevo_cliente_telefono" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50">
