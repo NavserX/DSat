@@ -21,17 +21,17 @@ class ClienteController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Validamos los datos
+        // Valido los datos
         $request->validate([
             'nombre' => 'required|string|max:255',
             'telefono' => 'nullable|string|max:50',
             'direccion' => 'nullable|string|max:255',
         ]);
 
-        // 2. Creamos el cliente
+        // Creo el cliente
         $cliente = Cliente::create($request->all());
 
-        // 3. Lo devolvemos al frontend con código 201 (Creado)
+        // Lo devolvuelvo al frontend con código 201 (Creado)
         return response()->json($cliente, 201);
     }
 }

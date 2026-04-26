@@ -41,10 +41,9 @@ class ReparacionController extends Controller
 
         $request->validate([
             'marca_id'    => 'required|exists:marcas,id',
-            // OJO: Asumo que la tabla de técnicos es la de 'users'. Si tienes una tabla 'tecnicos', cámbialo a exists:tecnicos,id
             'tecnico_id'  => 'nullable|exists:users,id',
             'cliente_id'  => 'required|exists:clientes,id',
-            'descripcion' => 'nullable|string', // Permito que la descripción inicial venga vacía a veces
+            'descripcion' => 'nullable|string', // Permito que la descripción inicial venga vacía
             'fecha_entrada' => 'nullable|date',
             'estado'      => 'nullable|string'
         ]);
@@ -81,17 +80,17 @@ class ReparacionController extends Controller
         $user = auth()->user();
         $reparacion = Reparacion::findOrFail($id);
 
-        // SEGURIDAD CLAVE: Un técnico solo puede modificar un aviso si ES SUYO, o si ESTÁ LIBRE (para cogerlo)
+        // Por seguridad un técnico solo puede modificar un aviso si ES SUYO, o si ESTÁ LIBRE (para cogerlo)
         if ($user->rol === 'tecnico' && $reparacion->tecnico_id !== null && $reparacion->tecnico_id !== $user->id) {
             return response()->json(['error' => 'No tienes permiso para editar un aviso de otro compañero.'], 403);
         }
 
         $request->validate([
             'marca_id'    => 'exists:marcas,id',
-            'tecnico_id'  => 'nullable|exists:users,id', // Debe permitir nulos
+            'tecnico_id'  => 'nullable|exists:users,id', // Permito que el técnico sea nulo
             'cliente_id'  => 'exists:clientes,id',
-            'resolucion_texto' => 'nullable|string', // Para el nuevo campo de finalizar
-            'piezas_utilizadas' => 'nullable|json'   // Para las piezas
+            'resolucion_texto' => 'nullable|string',
+            'piezas_utilizadas' => 'nullable|json'
         ]);
 
         $reparacion->update($request->all());

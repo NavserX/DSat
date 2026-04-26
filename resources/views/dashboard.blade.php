@@ -163,9 +163,23 @@
 
             <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-xl text-gray-800 mb-8">
                 <label class="block text-sm font-semibold mb-2">Busca un Cliente para ver su historial:</label>
-                <div class="relative w-full lg:w-1/2">
+                <div class="relative w-full lg:w-1/2 mb-4">
                     <input type="text" id="historial_cliente_search" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400 bg-gray-50 text-lg" placeholder="Escribe el nombre o teléfono..." autocomplete="off" onkeyup="filtrarClientes('historial_cliente_search', 'historial_cliente_dropdown', cargarHistorialCliente)">
                     <ul id="historial_cliente_dropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-60 overflow-y-auto shadow-2xl text-lg"></ul>
+                </div>
+
+                <div id="filtros_fechas_cliente" class="flex flex-col md:flex-row gap-4 items-end hidden border-t pt-4 mt-2">
+                    <div class="w-full md:w-1/3">
+                        <label class="block text-sm font-semibold mb-2">Desde (Fecha):</label>
+                        <input type="date" id="filtro_cli_fecha_inicio" class="w-full p-2.5 border rounded bg-gray-50" onchange="aplicarFiltroFechasCliente()">
+                    </div>
+                    <div class="w-full md:w-1/3">
+                        <label class="block text-sm font-semibold mb-2">Hasta (Fecha):</label>
+                        <input type="date" id="filtro_cli_fecha_fin" class="w-full p-2.5 border rounded bg-gray-50" onchange="aplicarFiltroFechasCliente()">
+                    </div>
+                    <div class="w-full md:w-1/3">
+                        <button onclick="aplicarFiltroFechasCliente()" class="w-full bg-blue-100 text-blue-700 px-6 py-2.5 rounded hover:bg-blue-200 transition font-semibold">🔄 Filtrar Avisos</button>
+                    </div>
                 </div>
             </div>
 
@@ -206,7 +220,7 @@
                     <input type="date" id="filtro_fecha_fin" class="w-full p-2.5 border rounded bg-gray-50">
                 </div>
                 <div class="w-full md:w-auto flex-1">
-                    <button onclick="filtrarHistorialTecnicos()" class="w-full bg-blue-600 text-white px-6 py-2.5 rounded hover:bg-blue-700 transition font-semibold shadow-md">Filtrar Avisos</button>
+                    <button onclick="filtrarHistorialTecnicos()" class="w-full bg-blue-100 text-blue-700 px-6 py-2.5 rounded hover:bg-blue-200 transition font-semibold">🔄 Filtrar Avisos</button>
                 </div>
             </div>
 
@@ -336,7 +350,7 @@
     </div>
 </div>
 
-<script src="{{ asset('js/panel-tecnico.js') }}?v={{ time() }}"></script>
+<script type="module" src="{{ asset('js/main.js') }}?v={{ time() }}"></script>
 
 </body>
 </html>
