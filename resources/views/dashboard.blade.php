@@ -26,7 +26,9 @@
         </div>
 
         <nav class="flex gap-2 lg:flex-col lg:space-y-2 flex-1 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-            <button onclick="mostrarPantalla('pantalla_reparaciones', this)" class="menu-btn w-full text-left px-4 py-2 rounded bg-blue-600 whitespace-nowrap transition">Reparaciones</button>
+            <button id="btn-menu-reparaciones" onclick="mostrarPantalla('pantalla_reparaciones', this)" class="menu-btn w-full text-left px-4 py-2 rounded bg-blue-600 whitespace-nowrap transition">Reparaciones</button>
+
+            <button id="btn-menu-libres" onclick="mostrarPantalla('pantalla_libres', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition border-l-4 border-yellow-500">📥 Avisos Libres</button>
 
             <button id="btn-menu-clientes" onclick="mostrarPantalla('pantalla_clientes', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">Historial Clientes</button>
             <button id="btn-menu-tecnicos" onclick="mostrarPantalla('pantalla_tecnicos', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">Historial Técnicos</button>
@@ -60,7 +62,6 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-
                 <div id="caja-formulario-reparacion" class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative">
                     <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title">Nueva Reparación</h2>
                     <input type="hidden" id="rep-id">
@@ -132,6 +133,27 @@
                     <a id="link_como_llegar" href="#" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold shadow-md">
                         📍 Cómo llegar (Abrir en Google Maps)
                     </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="pantalla_libres" class="pantalla-seccion hidden">
+            <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-yellow-400">Bandeja de Avisos Libres</h1>
+            <p class="text-blue-200 mb-6">Avisos pendientes que aún no tienen ningún técnico asignado. Pulsa ▶️ para asignártelo y empezar a trabajar.</p>
+
+            <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead>
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Fecha / Aviso</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Cliente / Marca</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Avería</th>
+                            <th class="py-3 px-4 text-center whitespace-nowrap">Asignarme</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tabla-avisos-libres"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -236,13 +258,13 @@
         <input type="text" id="nuevo_cliente_nombre" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50">
 
         <label class="block text-sm mt-3 font-semibold">Email <span class="text-red-500">*</span></label>
-        <input type="email" id="nuevo_cliente_email" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="correo@ejemplo.com">
+        <input type="email" id="nuevo_cliente_email" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="taller@ofimaticadigital.es">
 
         <label class="block text-sm mt-3 font-semibold">Teléfono</label>
         <input type="text" id="nuevo_cliente_telefono" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50">
 
         <label class="block text-sm mt-3 font-semibold">Dirección</label>
-        <input type="text" id="nuevo_cliente_direccion" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Ej: Calle Mayor 1, Madrid">
+        <input type="text" id="nuevo_cliente_direccion" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Ej: Avda. de la Libertad, 19, Petrer">
 
         <div class="flex gap-2 mt-6">
             <button onclick="guardarNuevoCliente()" class="flex-1 bg-green-600 text-white p-2.5 rounded hover:bg-green-700 transition font-semibold shadow">
@@ -255,7 +277,66 @@
     </div>
 </div>
 
-<script src="{{ asset('js/panel-tecnico.js') }}"></script>
+<div id="modal_finalizar" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex justify-center items-center hidden overflow-y-auto py-10">
+    <div class="bg-white text-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl p-6 mx-4">
+        <h2 class="text-2xl font-bold mb-2 border-b pb-2 text-green-600">✅ Finalizar Reparación #<span id="fin_rep_id_display"></span></h2>
+        <input type="hidden" id="fin_rep_id">
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-700">Fecha Cierre <span class="text-red-500">*</span></label>
+                <input type="date" id="fin_fecha_cierre" class="w-full border p-2 rounded focus:ring-2 focus:ring-green-400 bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700">Hora Inicio <span class="text-red-500">*</span></label>
+                <input type="time" id="fin_hora_inicio" class="w-full border p-2 rounded focus:ring-2 focus:ring-green-400 bg-gray-50">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-700">Hora Fin <span class="text-red-500">*</span></label>
+                <input type="time" id="fin_hora_fin" class="w-full border p-2 rounded focus:ring-2 focus:ring-green-400 bg-gray-50">
+            </div>
+        </div>
+
+        <label class="block text-sm mt-4 font-semibold text-gray-700">Trabajo Realizado / Resolución <span class="text-red-500">*</span></label>
+        <textarea id="fin_resolucion" class="w-full p-3 border rounded mt-1 focus:ring-2 focus:ring-green-400 bg-gray-50" rows="4" placeholder="Describe qué se ha reparado, ajustado o limpiado..."></textarea>
+
+        <div class="mt-6 border-t pt-4">
+            <h3 class="text-lg font-bold text-blue-800 mb-3">🛠️ Piezas Utilizadas</h3>
+
+            <div class="flex flex-col sm:flex-row gap-2 mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <input type="text" id="add_pieza_ref" placeholder="Ref. / Código" class="flex-1 p-2 border rounded text-sm">
+                <input type="text" id="add_pieza_desc" placeholder="Descripción de la pieza" class="flex-[2] p-2 border rounded text-sm">
+                <input type="number" id="add_pieza_cant" placeholder="Cant." value="1" min="1" class="w-20 p-2 border rounded text-sm">
+                <button type="button" onclick="agregarPiezaLista()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-bold text-sm">Añadir</button>
+            </div>
+
+            <table class="min-w-full text-sm border">
+                <thead class="bg-gray-100">
+                <tr>
+                    <th class="p-2 text-left">Ref.</th>
+                    <th class="p-2 text-left">Descripción</th>
+                    <th class="p-2 text-center">Cant.</th>
+                    <th class="p-2 text-center"></th>
+                </tr>
+                </thead>
+                <tbody id="lista_piezas_tbody">
+                <tr><td colspan="4" class="text-center p-3 text-gray-400 italic">No se han añadido piezas.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex gap-3 mt-8">
+            <button onclick="guardarFinalizacion()" class="flex-1 bg-green-600 text-white p-3 rounded hover:bg-green-700 transition font-bold text-lg shadow-lg">
+                Cerrar Aviso
+            </button>
+            <button onclick="cerrarModalFinalizar()" type="button" class="flex-1 bg-gray-200 text-gray-700 p-3 rounded hover:bg-gray-300 transition font-bold text-lg shadow">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="{{ asset('js/panel-tecnico.js') }}?v={{ time() }}"></script>
 
 </body>
 </html>
