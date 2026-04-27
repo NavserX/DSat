@@ -13,7 +13,7 @@
 
 <div class="flex flex-col lg:flex-row min-h-screen">
 
-    <aside class="w-full lg:w-64 bg-slate-950/60 backdrop-blur-lg p-4 lg:p-6 flex flex-col shrink-0">
+    <aside class="sticky top-0 z-50 w-full lg:w-64 lg:h-screen overflow-y-auto shadow-2xl bg-slate-950/60 backdrop-blur-lg p-4 lg:p-6 flex flex-col shrink-0">
 
         <div class="mb-4 lg:mb-10 flex flex-row lg:flex-col items-center lg:items-start justify-between">
             <div class="flex items-center lg:flex-col lg:items-start">

@@ -51,8 +51,8 @@ export function setFechaHoy() {
 
 export function mostrarMapaDeTabla(dir) {
     const map = document.getElementById('mapa_container');
-    document.getElementById('google_map_iframe').src = `http://googleusercontent.com/maps.google.com/maps?q=${dir}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-    document.getElementById('link_como_llegar').href = `http://googleusercontent.com/maps.google.com/maps?q=${dir}`;
+    document.getElementById('google_map_iframe').src = `https://maps.google.com/maps?q=${dir}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+    document.getElementById('link_como_llegar').href = `https://www.google.com/maps/search/?api=1&query=${dir}`;
     map.classList.remove('hidden');
 }
 
