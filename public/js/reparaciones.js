@@ -1,32 +1,45 @@
 // ==========================================================================
-// REPARACIONES.JS - MOTOR PRINCIPAL
+// 🛠️ REPARACIONES.JS - MOTOR PRINCIPAL
 // ==========================================================================
-import { token, AppState } from './api.js';
+import { token, AppState, cargarPiezas } from './api.js';
 import { mostrarMapaDeTabla, setFechaHoy } from './ui.js';
 import { seleccionarClienteReparacion } from './clientes.js';
 
+// --- VARIABLES DE PAGINACIÓN ---
+export let filtroEstadoReparaciones = 'todos';
+export let paginaActualReparaciones = 1;
+export const itemsPorPaginaReparaciones = 5;
+
+// --- FUNCIONES DE PAGINACIÓN Y FILTRADO ---
+export function filtrarPorEstado(estado) {
+    if (filtroEstadoReparaciones === estado) {
+        filtroEstadoReparaciones = 'todos';
+    } else {
+        filtroEstadoReparaciones = estado;
+    }
+    paginaActualReparaciones = 1;
+    renderizarTablaReparaciones();
+}
+
+export function cambiarPaginaReparaciones(direccion) {
+    paginaActualReparaciones += direccion;
+    renderizarTablaReparaciones();
+}
+
 // --- HISTORIALES ---
 
-// Se llama al hacer clic en el nombre del cliente en el buscador
 export function cargarHistorialCliente(cliente) {
-    // 1. Me guardo el cliente en el "bolsillo" global
     AppState.clienteHistorialActual = cliente;
-
-    // 2. Muestro los cuadros de fecha que estaban ocultos
     const divFiltros = document.getElementById('filtros_fechas_cliente');
     if (divFiltros) divFiltros.classList.remove('hidden');
-
     document.getElementById('titulo_historial_cliente').innerText = `Avisos de: ${cliente.nombre}`;
 
-    // 3. Ejecuto el filtro directamente (que por defecto sacará todo porque las fechas están vacías)
+    // Al cargar el cliente, aplicamos el filtro por si ya había fechas
     aplicarFiltroFechasCliente();
 }
 
-// Lee el cliente actual y las fechas, y pinta la tabla
 export function aplicarFiltroFechasCliente() {
     const cliente = AppState.clienteHistorialActual;
-    if (!cliente) return; // Si no hay cliente seleccionado, no hago nada
-
     const tbody = document.getElementById('tabla-historial-cliente');
     if (!tbody) return;
 
@@ -35,26 +48,47 @@ export function aplicarFiltroFechasCliente() {
     const fechaInicio = document.getElementById('filtro_cli_fecha_inicio').value;
     const fechaFin = document.getElementById('filtro_cli_fecha_fin').value;
 
-    // Primer filtro: Solo los avisos de este cliente
+    // --- NUEVO SEGURO: Bloquear la carga si no hay cliente o no hay fechas ---
+    if (!cliente || !fechaInicio || !fechaFin) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500 italic">Selecciona un cliente y define fecha de inicio y fin para ver el historial.</td></tr>`;
+        return; // Detenemos la función aquí
+    }
+
     let historial = AppState.todasLasReparaciones.filter(rep => rep.cliente_id === cliente.id);
 
-    // Segundo filtro: Acotar por fechas
-    if (fechaInicio) historial = historial.filter(rep => (rep.fecha_cierre || rep.fecha_entrada || rep.created_at?.substring(0,10)) >= fechaInicio);
-    if (fechaFin) historial = historial.filter(rep => (rep.fecha_cierre || rep.fecha_entrada || rep.created_at?.substring(0,10)) <= fechaFin);
+    // Filtramos estrictamente por el rango de fechas
+    historial = historial.filter(rep => {
+        let f = rep.fecha_cierre || rep.fecha_entrada || rep.created_at?.substring(0,10);
+        return f >= fechaInicio && f <= fechaFin;
+    });
 
     if(historial.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-500">No hay historial en este rango de fechas.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-500">No hay historial para este cliente en las fechas indicadas.</td></tr>`;
     } else {
         historial.forEach(rep => {
             let fecha = rep.fecha_cierre || rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
             const repCodificada = encodeURIComponent(JSON.stringify(rep));
 
+            let btnImprimir = rep.estado === 'terminado'
+                ? `<button onclick="generarPDFReparacion('${repCodificada}')" class="text-gray-600 p-1 hover:scale-125 transition ml-2" title="Imprimir">🖨️</button>`
+                : '';
+
+            // Definimos el color según el estado
+            let colorEstado = {
+                pendiente: 'text-yellow-600',
+                "en proceso": 'text-blue-600',
+                terminado: 'text-green-600'
+            }[rep.estado] || 'text-gray-600';
+
             tbody.innerHTML += `
-            <tr class="border-b hover:bg-blue-100 cursor-pointer transition" onclick="verDetalleReparacion('${repCodificada}')">
-                <td class="py-3 px-4">${fecha}</td>
-                <td class="py-3 px-4"><strong>${rep.marca?.nombre || 'N/A'}</strong></td>
-                <td class="py-3 px-4">${rep.tecnico?.nombre || 'N/A'}</td>
-                <td class="py-3 px-4 font-semibold text-green-600">${rep.tiempo_total || '-'}</td>
+            <tr class="border-b hover:bg-blue-100 transition cursor-pointer">
+                <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')">${fecha}</td>
+                <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')"><strong>${rep.maquina?.modelo || 'Sin máquina'}</strong></td>
+                <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')">${rep.tecnico?.nombre || 'N/A'}</td>
+                <td class="py-3 px-4 font-bold flex items-center justify-between ${colorEstado}">
+                    <span onclick="verDetalleReparacion('${repCodificada}')" class="uppercase text-xs px-2 py-1 bg-white rounded shadow-sm border">${rep.estado}</span>
+                    ${btnImprimir}
+                </td>
             </tr>`;
         });
     }
@@ -70,13 +104,20 @@ export function filtrarHistorialTecnicos() {
 
     tbody.innerHTML = '';
 
+    // --- NUEVO SEGURO: Bloquear la carga si falta ALGUNA de las dos fechas ---
+    if (!fechaInicio || !fechaFin) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500 italic">Selecciona fecha de inicio y fin para ver el historial del técnico.</td></tr>`;
+        return; // Detenemos la función aquí
+    }
+
     let filtrados = AppState.todasLasReparaciones;
+
     if (tecId) filtrados = filtrados.filter(rep => rep.tecnico_id == tecId);
     if (fechaInicio) filtrados = filtrados.filter(rep => (rep.fecha_cierre || rep.fecha_entrada || rep.created_at?.substring(0,10)) >= fechaInicio);
     if (fechaFin) filtrados = filtrados.filter(rep => (rep.fecha_cierre || rep.fecha_entrada || rep.created_at?.substring(0,10)) <= fechaFin);
 
     if(filtrados.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-500">Sin resultados.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500">Sin resultados para los filtros aplicados.</td></tr>`;
         return;
     }
 
@@ -84,12 +125,26 @@ export function filtrarHistorialTecnicos() {
         let fecha = rep.fecha_cierre || rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
         const repCodificada = encodeURIComponent(JSON.stringify(rep));
 
+        let btnImprimir = rep.estado === 'terminado'
+            ? `<button onclick="generarPDFReparacion('${repCodificada}')" class="text-gray-600 p-1 hover:scale-125 transition ml-2" title="Imprimir">🖨️</button>`
+            : '';
+
+        // Definimos el color según el estado
+        let colorEstado = {
+            pendiente: 'text-yellow-600',
+            "en proceso": 'text-blue-600',
+            terminado: 'text-green-600'
+        }[rep.estado] || 'text-gray-600';
+
         tbody.innerHTML += `
-        <tr class="border-b hover:bg-blue-100 cursor-pointer transition" onclick="verDetalleReparacion('${repCodificada}')">
-            <td class="py-3 px-4">${fecha}</td>
-            <td class="py-3 px-4">${rep.tecnico?.nombre || 'N/A'}</td>
-            <td class="py-3 px-4">${rep.cliente?.nombre || 'S/N'}</td>
-            <td class="py-3 px-4 font-bold text-green-600">${rep.tiempo_total || '-'}</td>
+        <tr class="border-b hover:bg-blue-100 transition cursor-pointer">
+            <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')">${fecha}</td>
+            <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')">${rep.tecnico?.nombre || 'N/A'}</td>
+            <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')">${rep.cliente?.nombre || 'S/N'}</td>
+            <td class="py-3 px-4 font-bold flex items-center justify-between ${colorEstado}">
+                <span onclick="verDetalleReparacion('${repCodificada}')" class="uppercase text-xs px-2 py-1 bg-white rounded shadow-sm border">${rep.estado}</span>
+                ${btnImprimir}
+            </td>
         </tr>`;
     });
 }
@@ -98,16 +153,14 @@ export function filtrarHistorialTecnicos() {
 export async function asignarmeAviso(id) {
     const rep = AppState.todasLasReparaciones.find(r => r.id === id);
     if (!rep) return;
-
     const datos = {
         cliente_id: rep.cliente_id,
         tecnico_id: AppState.usuarioActual.id,
-        marca_id: rep.marca_id,
+        maquina_id: rep.maquina_id,
         descripcion: rep.descripcion,
         fecha_entrada: rep.fecha_entrada || new Date().toISOString().split('T')[0],
         estado: 'en proceso'
     };
-
     try {
         const res = await fetch(`/api/reparaciones/${id}`, {
             method: 'PUT',
@@ -115,7 +168,7 @@ export async function asignarmeAviso(id) {
             body: JSON.stringify(datos)
         });
         if (res.ok) {
-            cargarReparaciones();
+            await cargarReparaciones(true); // Forzamos carga
             document.getElementById('btn-menu-reparaciones').click();
         }
     } catch (error) { console.error(error); }
@@ -124,23 +177,21 @@ export async function asignarmeAviso(id) {
 export async function cambiarEstadoRapido(id, nuevoEstado) {
     const rep = AppState.todasLasReparaciones.find(r => r.id === id);
     if (!rep) return;
-
     const datos = {
         cliente_id: rep.cliente_id,
         tecnico_id: rep.tecnico_id,
-        marca_id: rep.marca_id,
+        maquina_id: rep.maquina_id,
         descripcion: rep.descripcion,
         fecha_entrada: rep.fecha_entrada,
         estado: nuevoEstado
     };
-
     try {
         const res = await fetch(`/api/reparaciones/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(datos)
         });
-        if (res.ok) cargarReparaciones();
+        if (res.ok) await cargarReparaciones(true); // Forzamos carga
     } catch (error) { console.error(error); }
 }
 
@@ -149,20 +200,16 @@ export function abrirModalFinalizar(id) {
     document.getElementById('fin_rep_id').value = id;
     document.getElementById('fin_rep_id_display').innerText = id;
     document.getElementById('fin_resolucion').value = '';
-
     const hoy = new Date().toISOString().split('T')[0];
     const ahora = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-
     if(document.getElementById('fin_fecha_cierre')) document.getElementById('fin_fecha_cierre').value = hoy;
     if(document.getElementById('fin_hora_inicio')) document.getElementById('fin_hora_inicio').value = '';
     if(document.getElementById('fin_hora_fin')) document.getElementById('fin_hora_fin').value = ahora;
-
     AppState.piezasTemporales = [];
     document.getElementById('add_pieza_ref').value = '';
     document.getElementById('add_pieza_desc').value = '';
     document.getElementById('add_pieza_cant').value = '1';
     dibujarTablaPiezas();
-
     document.getElementById('modal_finalizar').classList.remove('hidden');
 }
 
@@ -174,14 +221,12 @@ export function agregarPiezaLista() {
     const ref = document.getElementById('add_pieza_ref').value;
     const desc = document.getElementById('add_pieza_desc').value;
     const cant = document.getElementById('add_pieza_cant').value;
-
     if(!desc) return alert("La descripción de la pieza es obligatoria");
-
     AppState.piezasTemporales.push({ referencia: ref, descripcion: desc, cantidad: cant });
     document.getElementById('add_pieza_ref').value = '';
     document.getElementById('add_pieza_desc').value = '';
+    document.getElementById('add_pieza_desc').readOnly = false;
     document.getElementById('add_pieza_cant').value = '1';
-
     dibujarTablaPiezas();
 }
 
@@ -193,12 +238,10 @@ export function eliminarPiezaLista(index) {
 export function dibujarTablaPiezas() {
     const tbody = document.getElementById('lista_piezas_tbody');
     tbody.innerHTML = '';
-
     if(AppState.piezasTemporales.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center p-3 text-gray-400 italic">No se han añadido piezas.</td></tr>`;
         return;
     }
-
     AppState.piezasTemporales.forEach((pieza, index) => {
         tbody.innerHTML += `
         <tr class="border-b bg-white">
@@ -215,7 +258,6 @@ export function dibujarTablaPiezas() {
 export async function guardarFinalizacion() {
     const id = document.getElementById('fin_rep_id').value;
     const resolucion = document.getElementById('fin_resolucion').value;
-
     const h_inicio = document.getElementById('fin_hora_inicio').value;
     const h_fin = document.getElementById('fin_hora_fin').value;
     const f_cierre = document.getElementById('fin_fecha_cierre').value;
@@ -226,7 +268,6 @@ export async function guardarFinalizacion() {
     const inicioDate = new Date(`2026-01-01T${h_inicio}:00`);
     const finDate = new Date(`2026-01-01T${h_fin}:00`);
     const diffMs = finDate - inicioDate;
-
     if (diffMs < 0) return alert("La hora de salida no puede ser anterior a la de entrada.");
 
     const diffHrs = Math.floor(diffMs / 3600000);
@@ -239,7 +280,7 @@ export async function guardarFinalizacion() {
     const datos = {
         cliente_id: rep.cliente_id,
         tecnico_id: rep.tecnico_id || AppState.usuarioActual.id,
-        marca_id: rep.marca_id,
+        maquina_id: rep.maquina_id,
         descripcion: rep.descripcion,
         fecha_entrada: rep.fecha_entrada,
         estado: 'terminado',
@@ -262,19 +303,20 @@ export async function guardarFinalizacion() {
         });
         if (res.ok) {
             cerrarModalFinalizar();
-            cargarReparaciones();
+            await cargarReparaciones(true); // Forzamos carga
+            await cargarPiezas();
         } else alert("Error al cerrar el aviso.");
     } catch (error) { console.error(error); }
     finally { btn.innerText = 'Cerrar Aviso'; btn.disabled = false; }
 }
 
 // --- CARGA DE TABLAS Y CRUD ---
-export async function cargarReparaciones() {
+export async function cargarReparaciones(forzar = false) {
     const editandoId = document.getElementById('rep-id').value;
     const escribiendoDesc = document.getElementById('descripcion').value;
     const modalFinVisible = !document.getElementById('modal_finalizar').classList.contains('hidden');
 
-    if (editandoId || escribiendoDesc.length > 0 || modalFinVisible) return;
+    if (!forzar && (editandoId || escribiendoDesc.length > 0 || modalFinVisible)) return;
 
     try {
         const res = await fetch('/api/reparaciones', { headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` } });
@@ -283,13 +325,9 @@ export async function cargarReparaciones() {
         const data = await res.json();
         AppState.todasLasReparaciones = data.sort((a,b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id));
 
-        const tbodyPrincipal = document.getElementById('tabla-reparaciones');
-        const tbodyLibres = document.getElementById('tabla-avisos-libres');
-
-        if(tbodyPrincipal) tbodyPrincipal.innerHTML = '';
-        if(tbodyLibres) tbodyLibres.innerHTML = '';
-
         let pendientes = 0, proceso = 0, terminado = 0;
+        const tbodyLibres = document.getElementById('tabla-avisos-libres');
+        if(tbodyLibres) tbodyLibres.innerHTML = '';
 
         AppState.todasLasReparaciones.forEach(rep => {
             if (rep.estado === 'pendiente') pendientes++;
@@ -298,27 +336,104 @@ export async function cargarReparaciones() {
 
             let fechaFormateada = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
 
-            // TABLA LIBRES
+            // Llenar tabla de "Avisos Libres"
             if (rep.estado === 'pendiente' && !rep.tecnico_id && tbodyLibres) {
                 tbodyLibres.innerHTML += `
                 <tr class="hover:bg-yellow-50 transition border-b">
                     <td class="p-4"><span class="font-bold text-blue-600">#${rep.id}</span><br><span class="text-xs text-gray-500">📅 ${fechaFormateada}</span></td>
-                    <td class="p-4"><span class="font-medium">${rep.cliente?.nombre || 'S/N'}</span><br><span class="text-xs font-bold text-blue-600">${rep.marca?.nombre || 'S/N'}</span></td>
+                    <td class="p-4">
+                        <span class="font-medium">${rep.cliente?.nombre || 'S/N'}</span><br>
+                        <span class="text-xs font-bold text-blue-600">🖨️ ${rep.maquina?.modelo || 'Sin máquina'}</span>
+                    </td>
                     <td class="p-4 text-xs text-gray-700 max-w-xs">${rep.descripcion || ''}</td>
                     <td class="p-4 text-center"><button onclick="asignarmeAviso(${rep.id})" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg font-bold shadow hover:bg-yellow-500 transition hover:scale-105">▶️ Coger Aviso</button></td>
                 </tr>`;
             }
+        });
 
-            // TABLA PRINCIPAL
+        document.getElementById('stat-pendientes').innerText = pendientes;
+        document.getElementById('stat-proceso').innerText = proceso;
+        document.getElementById('stat-terminado').innerText = terminado;
+
+        // DIBUJAMOS LA TABLA CON LOS FILTROS Y PAGINACIÓN ACTUAL
+        renderizarTablaReparaciones();
+
+        if (!window.intervaloRealTime) {
+            window.intervaloRealTime = setInterval(async () => {
+                const pRep = document.getElementById('pantalla_reparaciones');
+                const pLib = document.getElementById('pantalla_libres');
+                const pInv = document.getElementById('pantalla_inventario');
+                if ((pRep && !pRep.classList.contains('hidden')) || (pLib && !pLib.classList.contains('hidden')) || (pInv && !pInv.classList.contains('hidden'))) {
+                    await cargarReparaciones();
+                    await cargarPiezas();
+                }
+            }, 10000);
+        }
+        filtrarHistorialTecnicos();
+        if (AppState.clienteHistorialActual) aplicarFiltroFechasCliente();
+    } catch (error) { console.error(error); }
+}
+
+// --- DIBUJAR TABLA (PAGINADA Y FILTRADA) ---
+export function renderizarTablaReparaciones() {
+    const tbodyPrincipal = document.getElementById('tabla-reparaciones');
+    if(!tbodyPrincipal) return;
+
+    tbodyPrincipal.innerHTML = '';
+
+    // --- NUEVO: Efecto visual de iluminación en las tarjetas ---
+    ['pendiente', 'en proceso', 'terminado'].forEach(estado => {
+        const id = `tarjeta-${estado.replace(' ', '-')}`;
+        const tarjeta = document.getElementById(id);
+        if (tarjeta) {
+            if (filtroEstadoReparaciones === estado) {
+                // Tarjeta Activa (Más opaca y con borde blanco)
+                tarjeta.classList.add('bg-white/30', 'border-white/50');
+                tarjeta.classList.remove('bg-white/10', 'border-transparent');
+            } else {
+                // Tarjeta Inactiva (Translúcida normal)
+                tarjeta.classList.add('bg-white/10', 'border-transparent');
+                tarjeta.classList.remove('bg-white/30', 'border-white/50');
+            }
+        }
+    });
+
+    // 1. Filtrar
+    let filtradas = AppState.todasLasReparaciones;
+    if (filtroEstadoReparaciones !== 'pendiente') {
+        filtradas = filtradas.filter(rep => rep.estado === filtroEstadoReparaciones);
+    }
+
+    // 2. Paginar
+    const totalItems = filtradas.length;
+    const totalPaginas = Math.ceil(totalItems / itemsPorPaginaReparaciones) || 1;
+
+    if (paginaActualReparaciones > totalPaginas) paginaActualReparaciones = totalPaginas;
+    if (paginaActualReparaciones < 1) paginaActualReparaciones = 1;
+
+    const inicio = (paginaActualReparaciones - 1) * itemsPorPaginaReparaciones;
+    const fin = inicio + itemsPorPaginaReparaciones;
+    const paginadas = filtradas.slice(inicio, fin);
+
+    // 3. Pintar
+    if (paginadas.length === 0) {
+        tbodyPrincipal.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500 italic">No hay avisos para mostrar.</td></tr>`;
+    } else {
+        paginadas.forEach(rep => {
+            let fechaFormateada = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
             let color = { pendiente: 'bg-yellow-100 text-yellow-700', "en proceso": 'bg-blue-100 text-blue-700', terminado: 'bg-green-100 text-green-700' }[rep.estado];
             const repCodificada = encodeURIComponent(JSON.stringify(rep));
 
             let btnMapa = rep.cliente?.direccion ? `<button type="button" onclick="mostrarMapaDeTabla('${encodeURIComponent(rep.cliente.direccion)}')" class="text-green-600 p-2 hover:scale-125 inline-block">📍</button>` : '';
             let btnLlamar = rep.cliente?.telefono ? `<a href="tel:${rep.cliente.telefono}" class="text-blue-500 p-2 hover:scale-125 inline-block">📞</a>` : '';
-
             let btnBorrar = `<button onclick="borrarReparacion(${rep.id})" class="text-red-500 p-2 hover:scale-125 inline-block">🗑️</button>`;
             let btnEditar = `<button onclick="editarReparacion('${repCodificada}')" class="text-blue-500 p-2 transition hover:scale-125 inline-block" title="Editar">✏️</button>`;
             let btnEstadoRapido = '';
+
+            let btnImprimir = '';
+            if (rep.estado === 'terminado') {
+                btnImprimir = `<button onclick="generarPDFReparacion('${repCodificada}')" class="text-gray-600 p-2 hover:scale-125 inline-block" title="Imprimir Parte">🖨️</button>`;
+            }
 
             if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
                 btnBorrar = ''; btnEditar = '';
@@ -335,58 +450,49 @@ export async function cargarReparaciones() {
                 cajitaResolucion = `<div class="mt-2 bg-green-50 p-3 rounded border border-green-200"><span class="block text-[10px] uppercase font-bold text-green-600 mb-1">✔️ Trabajo Realizado (${rep.tiempo_total || '-'}):</span><span class="text-sm text-gray-800">${rep.resolucion_texto}</span></div>`;
             }
 
-            if(tbodyPrincipal) {
-                tbodyPrincipal.innerHTML += `
-                <tr class="hover:bg-blue-50/30 transition">
-                    <td class="pt-4 pb-2 px-4 whitespace-nowrap align-top"><div class="font-bold text-blue-600 text-base">#${rep.id}</div><div class="text-gray-500 text-xs mt-1">📅 ${fechaFormateada}</div></td>
-                    <td class="pt-4 pb-2 px-4 min-w-[200px] align-top"><div class="font-medium text-gray-900">${rep.cliente?.nombre || 'S/N'}</div><div class="text-xs mt-1 font-bold ${rep.tecnico_id ? 'text-purple-600' : 'text-gray-400'}">👷 ${rep.tecnico?.nombre || 'Sin asignar'}</div></td>
-                    <td class="pt-4 pb-2 px-4 whitespace-nowrap align-top"><span class="px-3 py-1 rounded-full text-xs font-bold ${color}">${rep.estado}</span></td>
-                    <td class="pt-4 pb-2 px-4 text-center whitespace-nowrap align-top">${btnEstadoRapido}${btnLlamar}${btnMapa}${btnEditar}${btnBorrar}</td>
-                </tr>
-                <tr class="border-b hover:bg-blue-50/30 transition">
-                    <td colspan="4" class="px-4 pb-4 pt-1"><div class="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border w-full"><span class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Avería:</span>${rep.descripcion ? rep.descripcion.replace(/\n/g, '<br>') : '<span class="italic text-gray-400">Sin descripción...</span>'}${cajitaResolucion}</div></td>
-                </tr>`;
-            }
+            let infoMaquina = rep.maquina_id && rep.maquina ? `<div class="text-xs mt-1 text-teal-600 font-bold">🖨️ ${rep.maquina.modelo}</div>` : '';
+
+            tbodyPrincipal.innerHTML += `
+            <tr class="hover:bg-blue-50/30 transition">
+                <td class="pt-4 pb-2 px-4 whitespace-nowrap align-top"><div class="font-bold text-blue-600 text-base">#${rep.id}</div><div class="text-gray-500 text-xs mt-1">📅 ${fechaFormateada}</div></td>
+                <td class="pt-4 pb-2 px-4 min-w-[200px] align-top">
+                    <div class="font-medium text-gray-900">${rep.cliente?.nombre || 'S/N'}</div>
+                    ${infoMaquina}
+                    <div class="text-xs mt-1 font-bold ${rep.tecnico_id ? 'text-purple-600' : 'text-gray-400'}">👷 ${rep.tecnico?.nombre || 'Sin asignar'}</div>
+                </td>
+                <td class="pt-4 pb-2 px-4 whitespace-nowrap align-top"><span class="px-3 py-1 rounded-full text-xs font-bold ${color}">${rep.estado}</span></td>
+                <td class="pt-4 pb-2 px-4 text-center whitespace-nowrap align-top">${btnEstadoRapido}${btnLlamar}${btnMapa}${btnImprimir}${btnEditar}${btnBorrar}</td>
+            </tr>
+            <tr class="border-b hover:bg-blue-50/30 transition">
+                <td colspan="4" class="px-4 pb-4 pt-1"><div class="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border w-full"><span class="block text-[10px] uppercase font-bold text-gray-400 mb-1">Avería:</span>${rep.descripcion ? rep.descripcion.replace(/\n/g, '<br>') : '<span class="italic text-gray-400">Sin descripción...</span>'}${cajitaResolucion}</div></td>
+            </tr>`;
         });
+    }
 
-        document.getElementById('stat-pendientes').innerText = pendientes;
-        document.getElementById('stat-proceso').innerText = proceso;
-        document.getElementById('stat-terminado').innerText = terminado;
-
-        if (!window.intervaloRealTime) {
-            window.intervaloRealTime = setInterval(() => {
-                const pantallaReparaciones = document.getElementById('pantalla_reparaciones');
-                const pantallaLibres = document.getElementById('pantalla_libres');
-                if ((pantallaReparaciones && !pantallaReparaciones.classList.contains('hidden')) ||
-                    (pantallaLibres && !pantallaLibres.classList.contains('hidden'))) {
-                    cargarReparaciones();
-                }
-            }, 10000);
-        }
-        filtrarHistorialTecnicos();
-
-        // Si hay un cliente seleccionado, también refrescamos su historial al recargar reparaciones
-        if (AppState.clienteHistorialActual) {
-            aplicarFiltroFechasCliente();
-        }
-    } catch (error) { console.error(error); }
+    // 4. Actualizar botones de paginación
+    const divPaginacion = document.getElementById('paginacion-reparaciones');
+    if (divPaginacion) {
+        divPaginacion.classList.remove('hidden');
+        let filtroTxt = filtroEstadoReparaciones === 'todos' ? 'TODOS LOS AVISOS' : `AVISOS ${filtroEstadoReparaciones.toUpperCase()}S`;
+        document.getElementById('texto-paginacion-rep').innerText = `Página ${paginaActualReparaciones} de ${totalPaginas} - (${totalItems} ${filtroTxt})`;
+        document.getElementById('btn-prev-rep').disabled = paginaActualReparaciones === 1;
+        document.getElementById('btn-next-rep').disabled = paginaActualReparaciones === totalPaginas;
+    }
 }
 
 export async function guardarReparacion() {
     const id = document.getElementById('rep-id').value;
     const tecnicoSeleccionado = document.getElementById('tecnico_id').value;
-
+    const maquinaSeleccionada = document.getElementById('reparacion_maquina_id').value;
     const datos = {
         cliente_id: document.getElementById('cliente_id').value,
         tecnico_id: tecnicoSeleccionado === "" ? null : tecnicoSeleccionado,
-        marca_id: document.getElementById('marca_id').value,
+        maquina_id: maquinaSeleccionada === "" ? null : maquinaSeleccionada,
         descripcion: document.getElementById('descripcion').value,
         fecha_entrada: document.getElementById('fecha_entrada').value,
         estado: document.getElementById('estado').value
     };
-
-    if (!datos.cliente_id || !datos.marca_id) return alert('Faltan datos obligatorios.');
-
+    if (!datos.cliente_id) return alert('Selecciona un cliente para el aviso.');
     const url = id ? `/api/reparaciones/${id}` : '/api/reparaciones';
     try {
         const res = await fetch(url, {
@@ -394,7 +500,6 @@ export async function guardarReparacion() {
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(datos)
         });
-
         if (res.ok) {
             limpiarFormulario();
             if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
@@ -402,14 +507,13 @@ export async function guardarReparacion() {
                 document.getElementById('caja-tabla-reparaciones').classList.remove('lg:col-span-2');
                 document.getElementById('caja-tabla-reparaciones').classList.add('col-span-1', 'lg:col-span-3');
             }
-            cargarReparaciones();
+            await cargarReparaciones(true); // Forzamos carga
         }
     } catch (error) { console.error(error); }
 }
 
 export function editarReparacion(repCodificada) {
     const rep = JSON.parse(decodeURIComponent(repCodificada));
-
     if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
         const cajaForm = document.getElementById('caja-formulario-reparacion');
         const cajaTabla = document.getElementById('caja-tabla-reparaciones');
@@ -419,17 +523,19 @@ export function editarReparacion(repCodificada) {
             cajaTabla.classList.add('lg:col-span-2');
         }
     }
-
     document.getElementById('form-title').innerText = 'Editar Reparación #' + rep.id;
     document.getElementById('rep-id').value = rep.id;
-    if (rep.cliente_id && rep.cliente) seleccionarClienteReparacion(rep.cliente);
-
+    if (rep.cliente_id && rep.cliente) {
+        seleccionarClienteReparacion(rep.cliente);
+        setTimeout(() => {
+            const selectMaq = document.getElementById('reparacion_maquina_id');
+            if(selectMaq) selectMaq.value = rep.maquina_id || '';
+        }, 10);
+    }
     document.getElementById('tecnico_id').value = rep.tecnico_id || '';
-    document.getElementById('marca_id').value = rep.marca_id || '';
     document.getElementById('descripcion').value = rep.descripcion || '';
     document.getElementById('estado').value = rep.estado;
     if(rep.fecha_entrada) document.getElementById('fecha_entrada').value = rep.fecha_entrada;
-
     document.getElementById('form-title').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -440,7 +546,13 @@ export async function borrarReparacion(id) {
             method: 'DELETE',
             headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${token}` }
         });
-        if (res.ok) cargarReparaciones();
+
+        if (res.ok) {
+            if (document.getElementById('rep-id').value == id) {
+                limpiarFormulario();
+            }
+            await cargarReparaciones(true); // Forzamos carga
+        }
     } catch (error) { console.error(error); }
 }
 
@@ -452,7 +564,11 @@ export function limpiarFormulario() {
     document.getElementById('cliente_info').classList.add('hidden');
     document.getElementById('mapa_container').classList.add('hidden');
     if (!AppState.usuarioActual || AppState.usuarioActual.rol !== 'tecnico') document.getElementById('tecnico_id').value = '';
-    document.getElementById('marca_id').value = '';
+    const selectMaquina = document.getElementById('reparacion_maquina_id');
+    if(selectMaquina) {
+        selectMaquina.innerHTML = '<option value="">Selecciona primero un cliente...</option>';
+        selectMaquina.classList.remove('bg-green-50', 'border-green-400');
+    }
     document.getElementById('descripcion').value = '';
     document.getElementById('estado').value = 'pendiente';
     setFechaHoy();
@@ -462,12 +578,12 @@ export function verDetalleReparacion(jsonRep) {
     const rep = JSON.parse(decodeURIComponent(jsonRep));
     const arrayPiezas = typeof rep.piezas_utilizadas === 'string' ? JSON.parse(rep.piezas_utilizadas) : (rep.piezas_utilizadas || []);
     let htmlPiezas = arrayPiezas.map(p => `- ${p.cantidad}x ${p.descripcion} (Ref: ${p.referencia || 'N/A'})`).join('\n') || 'Ninguna pieza utilizada.';
-
+    let stringMaquina = rep.maquina ? `🖨️ Máquina: ${rep.maquina.modelo} (S/N: ${rep.maquina.numero_serie})\n` : '';
     alert(`🛠️ REPARACIÓN #${rep.id} - ${rep.estado.toUpperCase()}
 -------------------------------------------------
 🧑‍🔧 Técnico: ${rep.tecnico?.nombre || 'Sin asignar'}
 🏢 Cliente: ${rep.cliente?.nombre || 'S/N'}
-📅 Fecha de Cierre: ${rep.fecha_cierre || 'No cerrado'}
+${stringMaquina}📅 Fecha de Cierre: ${rep.fecha_cierre || 'No cerrado'}
 ⏱️ Horario: ${rep.hora_inicio || '--:--'} a ${rep.hora_fin || '--:--'}
 ⏳ Tiempo Total: ${rep.tiempo_total || 'N/A'}
 
@@ -479,4 +595,61 @@ ${rep.resolucion_texto || 'Pendiente de resolución'}
 
 🔧 PIEZAS:
 ${htmlPiezas}`);
+}
+
+export function buscarPiezaModal() {
+    const query = document.getElementById('add_pieza_ref').value.toLowerCase();
+    const dropdown = document.getElementById('dropdown_piezas_modal');
+    dropdown.innerHTML = '';
+    if (query.length < 1) { dropdown.classList.add('hidden'); document.getElementById('add_pieza_desc').readOnly = false; return; }
+    const filtradas = AppState.listaPiezas.filter(p => p.referencia.toLowerCase().includes(query) || p.descripcion.toLowerCase().includes(query));
+    if (filtradas.length === 0) { dropdown.innerHTML = '<li class="p-2 text-gray-500 text-xs italic">No coincidencias.</li>'; document.getElementById('add_pieza_desc').readOnly = false; } else {
+        filtradas.forEach(p => {
+            const li = document.createElement('li');
+            li.className = 'p-2 hover:bg-blue-50 cursor-pointer border-b text-gray-800 flex justify-between items-center';
+            li.innerHTML = `<div><span class="font-bold text-xs">${p.referencia}</span> - <span class="text-xs text-gray-600">${p.descripcion}</span></div><div class="text-[10px] font-bold ${p.stock > 0 ? 'text-green-600' : 'text-red-500'}">Stock: ${p.stock}</div>`;
+            li.onclick = () => { document.getElementById('add_pieza_ref').value = p.referencia; document.getElementById('add_pieza_desc').value = p.descripcion; document.getElementById('add_pieza_desc').readOnly = true; dropdown.classList.add('hidden'); };
+            dropdown.appendChild(li);
+        });
+    }
+    dropdown.classList.remove('hidden');
+}
+
+export function generarPDFReparacion(repCodificada) {
+    const rep = JSON.parse(decodeURIComponent(repCodificada));
+    const piezas = typeof rep.piezas_utilizadas === 'string' ? JSON.parse(rep.piezas_utilizadas) : (rep.piezas_utilizadas || []);
+
+    const dominio = window.location.origin;
+    const logoUrl = dominio + '/img/logo-web-ofimatica-digital2.webp';
+
+    let piezasHTML = '';
+    if (piezas.length > 0) {
+        piezasHTML = piezas.map(p => `<tr><td>${p.referencia || 'N/A'}</td><td>${p.descripcion}</td><td style="text-align:center">${p.cantidad}</td></tr>`).join('');
+    } else {
+        piezasHTML = '<tr><td colspan="3" style="text-align:center; color: #999;">No se utilizaron piezas de repuesto</td></tr>';
+    }
+
+    const maquinaNombre = rep.maquina ? rep.maquina.modelo + ' (S/N: ' + rep.maquina.numero_serie + ')' : 'Aviso General';
+    const fechaCierreVal = rep.fecha_cierre || rep.fecha_entrada;
+
+    const ventimp = window.open(' ', '_blank');
+    ventimp.document.write('<html><head><title>Parte #' + rep.id + '</title>');
+    ventimp.document.write('<style>body{font-family:sans-serif;padding:40px;color:#333;}.header{display:flex;justify-content:space-between;border-bottom:2px solid #2563eb;padding-bottom:10px;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;}.caja{border:1px solid #e5e7eb;padding:10px;border-radius:5px;}h3{border-left:4px solid #2563eb;padding-left:10px;color:#1e3a8a;}table{width:100%;border-collapse:collapse;}th{background:#f9fafb;text-align:left;padding:8px;border-bottom:1px solid #ddd;}td{padding:8px;border-bottom:1px solid #eee;}.footer{margin-top:50px;display:flex;justify-content:space-between;}.firma{width:200px;border-top:1px solid #333;text-align:center;padding-top:10px;}</style></head><body>');
+
+    ventimp.document.write('<div class="header"><div><img src="' + logoUrl + '" style="max-width: 200px; height: auto;" alt="Digital Soluciones"></div><div style="text-align:right"><h3>PARTE DE TRABAJO</h3><p>Aviso: #' + rep.id + '</p></div></div>');
+
+    ventimp.document.write('<div class="grid"><div class="caja"><strong>Cliente:</strong><br>' + (rep.cliente?.nombre || 'S/N') + '<br>' + (rep.cliente?.direccion || '') + '</div>');
+    ventimp.document.write('<div class="caja"><strong>Fecha:</strong> ' + fechaCierreVal + '<br><strong>Técnico:</strong> ' + (rep.tecnico?.nombre || 'N/A') + '</div></div>');
+
+    ventimp.document.write('<p><strong>Máquina:</strong> ' + maquinaNombre + '</p>');
+    ventimp.document.write('<h3>Descripción Avería</h3><p>' + (rep.descripcion || 'Sin datos') + '</p>');
+    ventimp.document.write('<h3>Trabajo Realizado</h3><p>' + (rep.resolucion_texto || 'Pendiente') + '</p>');
+    ventimp.document.write('<p><strong>Tiempo total:</strong> ' + (rep.tiempo_total || '-') + '</p>');
+
+    ventimp.document.write('<h3>Piezas Utilizadas</h3><table><thead><tr><th>Ref</th><th>Descripción</th><th>Cant</th></tr></thead><tbody>' + piezasHTML + '</tbody></table>');
+
+    ventimp.document.write('<div class="footer"><div class="firma">Firma Técnico</div><div class="firma">Firma Cliente</div></div>');
+
+    ventimp.document.write('<script>setTimeout(function(){ window.print(); window.close(); }, 800);</script></body></html>');
+    ventimp.document.close();
 }

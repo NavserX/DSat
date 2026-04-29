@@ -26,14 +26,14 @@
         </div>
 
         <nav class="flex gap-2 lg:flex-col lg:space-y-2 flex-1 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-            <button id="btn-menu-reparaciones" onclick="mostrarPantalla('pantalla_reparaciones', this)" class="menu-btn w-full text-left px-4 py-2 rounded bg-blue-600 whitespace-nowrap transition">Reparaciones</button>
-
+            <button id="btn-menu-reparaciones" onclick="mostrarPantalla('pantalla_reparaciones', this)" class="menu-btn w-full text-left px-4 py-2 rounded bg-blue-600 whitespace-nowrap transition">🛠️ Reparaciones</button>
             <button id="btn-menu-libres" onclick="mostrarPantalla('pantalla_libres', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition border-l-4 border-yellow-500">📥 Avisos Libres</button>
-
-            <button id="btn-menu-clientes" onclick="mostrarPantalla('pantalla_clientes', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">Historial Clientes</button>
-            <button id="btn-menu-tecnicos" onclick="mostrarPantalla('pantalla_tecnicos', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">Historial Técnicos</button>
-
-            <button onclick="mostrarPantalla('pantalla_recursos', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">Recursos Técnicos</button>
+            <button id="btn-menu-clientes" onclick="mostrarPantalla('pantalla_clientes', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">📋 Historial Clientes</button>
+            <button id="btn-menu-tecnicos" onclick="mostrarPantalla('pantalla_tecnicos', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">👷 Historial Técnicos</button>
+            <button id="btn-menu-gestion-clientes" onclick="mostrarPantalla('pantalla_gestion_clientes', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">👥 Gestión Clientes</button>
+            <button id="btn-menu-maquinas" onclick="mostrarPantalla('pantalla_maquinas', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">🖨️ Parque Máquinas</button>
+            <button id="btn-menu-inventario" onclick="mostrarPantalla('pantalla_inventario', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">📦 Inventario Piezas</button>
+            <button onclick="mostrarPantalla('pantalla_recursos', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">📚 Recursos Técnicos</button>
         </nav>
 
         <button onclick="logout()" class="hidden lg:block mt-6 bg-red-600 py-2 rounded hover:bg-red-700 transition">
@@ -46,18 +46,18 @@
         <div id="pantalla_reparaciones" class="pantalla-seccion block">
             <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">Gestión de Reparaciones</h1>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6 mb-8 lg:mb-10">
-                <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
-                    <p class="text-sm text-blue-200">Pendientes</p>
-                    <p id="stat-pendientes" class="text-2xl lg:text-3xl font-bold text-yellow-400">0</p>
+            <div class="grid grid-cols-3 gap-3 sm:gap-6 mb-8 lg:mb-10">
+                <div id="tarjeta-pendiente" onclick="filtrarPorEstado('pendiente')" class="bg-white/10 backdrop-blur-lg p-3 sm:p-6 rounded-xl shadow-lg text-center cursor-pointer hover:bg-white/20 hover:scale-105 transition border border-transparent">
+                    <p class="text-xs sm:text-sm text-blue-200">Pendientes</p>
+                    <p id="stat-pendientes" class="text-xl sm:text-3xl font-bold text-yellow-400">0</p>
                 </div>
-                <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
-                    <p class="text-sm text-blue-200">En proceso</p>
-                    <p id="stat-proceso" class="text-2xl lg:text-3xl font-bold text-blue-400">0</p>
+                <div id="tarjeta-en-proceso" onclick="filtrarPorEstado('en proceso')" class="bg-white/10 backdrop-blur-lg p-3 sm:p-6 rounded-xl shadow-lg text-center cursor-pointer hover:bg-white/20 hover:scale-105 transition border border-transparent">
+                    <p class="text-xs sm:text-sm text-blue-200">En proceso</p>
+                    <p id="stat-proceso" class="text-xl sm:text-3xl font-bold text-blue-400">0</p>
                 </div>
-                <div class="bg-white/10 backdrop-blur-lg p-4 lg:p-6 rounded-xl shadow-lg">
-                    <p class="text-sm text-blue-200">Terminadas</p>
-                    <p id="stat-terminado" class="text-2xl lg:text-3xl font-bold text-green-400">0</p>
+                <div id="tarjeta-terminado" onclick="filtrarPorEstado('terminado')" class="bg-white/10 backdrop-blur-lg p-3 sm:p-6 rounded-xl shadow-lg text-center cursor-pointer hover:bg-white/20 hover:scale-105 transition border border-transparent">
+                    <p class="text-xs sm:text-sm text-blue-200">Terminadas</p>
+                    <p id="stat-terminado" class="text-xl sm:text-3xl font-bold text-green-400">0</p>
                 </div>
             </div>
 
@@ -66,36 +66,33 @@
                     <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title">Nueva Reparación</h2>
                     <input type="hidden" id="rep-id">
 
-                    <label class="block text-sm mt-3">Cliente</label>
-                    <div class="flex gap-2 mt-1 relative">
-                        <div class="relative flex-1">
-                            <input type="hidden" id="cliente_id">
-                            <input type="text" id="cliente_search" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400" placeholder="Buscar cliente..." autocomplete="off" onkeyup="filtrarClientes('cliente_search', 'cliente_dropdown', seleccionarClienteReparacion)">
-                            <ul id="cliente_dropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-48 overflow-y-auto shadow-xl"></ul>
-                        </div>
-                        <button type="button" onclick="abrirModalCliente()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded transition shadow-md" title="Nuevo Cliente">➕</button>
+                    <label class="block text-sm mt-3 font-semibold text-gray-700">Cliente</label>
+                    <div class="mt-1 relative">
+                        <input type="hidden" id="cliente_id">
+                        <input type="text" id="cliente_search" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-400 bg-gray-50 text-gray-800" placeholder="Escribe para buscar cliente..." autocomplete="off" onkeyup="filtrarClientes('cliente_search', 'cliente_dropdown', seleccionarClienteReparacion)">
+                        <ul id="cliente_dropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-48 overflow-y-auto shadow-xl"></ul>
                     </div>
 
                     <div id="cliente_info" class="text-sm mt-2 p-3 bg-blue-50 text-blue-800 rounded hidden border border-blue-200"></div>
 
-                    <label class="block text-sm mt-3">Técnico</label>
-                    <select id="tecnico_id" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
+                    <label class="block text-sm mt-3 font-semibold text-gray-700">Máquina del Cliente</label>
+                    <select id="reparacion_maquina_id" class="w-full p-2 border border-gray-300 rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50 text-gray-800">
+                        <option value="">Selecciona primero un cliente...</option>
+                    </select>
+
+                    <label class="block text-sm mt-3 font-semibold text-gray-700">Técnico</label>
+                    <select id="tecnico_id" class="w-full p-2 border border-gray-300 rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50 text-gray-800">
                         <option value="">Seleccione un técnico...</option>
                     </select>
 
-                    <label class="block text-sm mt-3">Marca</label>
-                    <select id="marca_id" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
-                        <option value="">Seleccione una marca...</option>
-                    </select>
+                    <label class="block text-sm mt-3 font-semibold text-gray-700">Descripción</label>
+                    <textarea id="descripcion" class="w-full p-2 border border-gray-300 rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50 text-gray-800" rows="3"></textarea>
 
-                    <label class="block text-sm mt-3">Descripción</label>
-                    <textarea id="descripcion" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400" rows="3"></textarea>
+                    <label class="block text-sm mt-3 font-semibold text-gray-700">Fecha de Entrada</label>
+                    <input type="date" id="fecha_entrada" class="w-full p-2 border border-gray-300 rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50 text-gray-800">
 
-                    <label class="block text-sm mt-3 font-semibold text-blue-800">Fecha de Entrada</label>
-                    <input type="date" id="fecha_entrada" class="w-full p-2 border border-blue-300 rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-blue-50">
-
-                    <label class="block text-sm mt-3">Estado</label>
-                    <select id="estado" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400">
+                    <label class="block text-sm mt-3 font-semibold text-gray-700">Estado</label>
+                    <select id="estado" class="w-full p-2 border border-gray-300 rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50 text-gray-800">
                         <option value="pendiente">Pendiente</option>
                         <option value="en proceso">En proceso</option>
                         <option value="terminado">Terminado</option>
@@ -111,15 +108,20 @@
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
                             <thead>
-                            <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-xs font-bold tracking-wider">
                                 <th class="py-3 px-4 text-left whitespace-nowrap">Aviso</th>
-                                <th class="py-3 px-4 text-left whitespace-nowrap">Cliente / Marca</th>
+                                <th class="py-3 px-4 text-left whitespace-nowrap">Cliente / Máquina</th>
                                 <th class="py-3 px-4 text-left whitespace-nowrap">Estado</th>
                                 <th class="py-3 px-4 text-center whitespace-nowrap">Acciones</th>
                             </tr>
                             </thead>
                             <tbody id="tabla-reparaciones"></tbody>
                         </table>
+                    </div>
+                    <div id="paginacion-reparaciones" class="flex justify-between items-center mt-4 bg-gray-50 p-3 rounded-lg border hidden">
+                        <button onclick="cambiarPaginaReparaciones(-1)" id="btn-prev-rep" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 transition text-white rounded-lg font-semibold disabled:opacity-40 disabled:cursor-not-allowed">⬅️ Anterior</button>
+                        <span id="texto-paginacion-rep" class="text-sm font-bold text-gray-700 uppercase">Página 1 de 1</span>
+                        <button onclick="cambiarPaginaReparaciones(1)" id="btn-next-rep" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 transition text-white rounded-lg font-semibold disabled:opacity-40 disabled:cursor-not-allowed">Siguiente ➡️</button>
                     </div>
                 </div>
             </div>
@@ -147,7 +149,7 @@
                         <thead>
                         <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
                             <th class="py-3 px-4 text-left whitespace-nowrap">Fecha / Aviso</th>
-                            <th class="py-3 px-4 text-left whitespace-nowrap">Cliente / Marca</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Cliente / Máquina</th>
                             <th class="py-3 px-4 text-left whitespace-nowrap">Avería</th>
                             <th class="py-3 px-4 text-center whitespace-nowrap">Asignarme</th>
                         </tr>
@@ -161,29 +163,23 @@
         <div id="pantalla_clientes" class="pantalla-seccion hidden">
             <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">Historial por Cliente</h1>
 
-            <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-xl text-gray-800 mb-8">
-                <label class="block text-sm font-semibold mb-2">Busca un Cliente para ver su historial:</label>
-                <div class="relative w-full lg:w-1/2 mb-4">
-                    <input type="text" id="historial_cliente_search" class="w-full p-3 border rounded focus:ring-2 focus:ring-blue-400 bg-gray-50 text-lg" placeholder="Escribe el nombre o teléfono..." autocomplete="off" onkeyup="filtrarClientes('historial_cliente_search', 'historial_cliente_dropdown', cargarHistorialCliente)">
-                    <ul id="historial_cliente_dropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-60 overflow-y-auto shadow-2xl text-lg"></ul>
+            <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-xl text-gray-800 mb-8 flex flex-col md:flex-row gap-6 items-end">
+                <div class="w-full md:w-1/3 relative">
+                    <label class="block text-sm font-semibold mb-2">Busca un Cliente:</label>
+                    <input type="text" id="historial_cliente_search" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Escribe nombre o teléfono..." autocomplete="off" onkeyup="filtrarClientes('historial_cliente_search', 'historial_cliente_dropdown', cargarHistorialCliente)">
+                    <ul id="historial_cliente_dropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-60 overflow-y-auto shadow-2xl text-sm"></ul>
                 </div>
-
-                <div id="filtros_fechas_cliente" class="flex flex-col md:flex-row gap-4 items-end hidden border-t pt-4 mt-2">
-                    <div class="w-full md:w-1/3">
-                        <label class="block text-sm font-semibold mb-2">Desde (Fecha):</label>
-                        <input type="date" id="filtro_cli_fecha_inicio" class="w-full p-2.5 border rounded bg-gray-50" onchange="aplicarFiltroFechasCliente()">
-                    </div>
-                    <div class="w-full md:w-1/3">
-                        <label class="block text-sm font-semibold mb-2">Hasta (Fecha):</label>
-                        <input type="date" id="filtro_cli_fecha_fin" class="w-full p-2.5 border rounded bg-gray-50" onchange="aplicarFiltroFechasCliente()">
-                    </div>
-                    <div class="w-full md:w-1/3">
-                        <button onclick="aplicarFiltroFechasCliente()" class="w-full bg-blue-100 text-blue-700 px-6 py-2.5 rounded hover:bg-blue-200 transition font-semibold">🔄 Filtrar Avisos</button>
-                    </div>
+                <div class="w-full md:w-1/3">
+                    <label class="block text-sm font-semibold mb-2">Desde:</label>
+                    <input type="date" id="filtro_cli_fecha_inicio" class="w-full p-2.5 border rounded bg-gray-50" onchange="aplicarFiltroFechasCliente()">
+                </div>
+                <div class="w-full md:w-1/3">
+                    <label class="block text-sm font-semibold mb-2">Hasta:</label>
+                    <input type="date" id="filtro_cli_fecha_fin" class="w-full p-2.5 border rounded bg-gray-50" onchange="aplicarFiltroFechasCliente()">
                 </div>
             </div>
 
-            <div id="contenedor_historial_cliente" class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl hidden">
+            <div id="contenedor_historial_cliente" class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl">
                 <h2 class="text-xl font-semibold mb-4 border-b pb-2 text-blue-600" id="titulo_historial_cliente">Reparaciones de Cliente</h2>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
@@ -195,7 +191,9 @@
                             <th class="py-3 px-4 text-left whitespace-nowrap">Estado</th>
                         </tr>
                         </thead>
-                        <tbody id="tabla-historial-cliente"></tbody>
+                        <tbody id="tabla-historial-cliente">
+                        <tr><td colspan="4" class="text-center py-8 text-gray-500 italic">Selecciona un cliente y un rango de fechas para ver el historial.</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -204,23 +202,20 @@
         <div id="pantalla_tecnicos" class="pantalla-seccion hidden">
             <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">Trabajo de Técnicos</h1>
 
-            <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-xl text-gray-800 mb-8 flex flex-col md:flex-row gap-4 items-end">
+            <div class="bg-white p-5 lg:p-6 rounded-2xl shadow-xl text-gray-800 mb-8 flex flex-col md:flex-row gap-6 items-end">
                 <div class="w-full md:w-1/3">
                     <label class="block text-sm font-semibold mb-2">Selecciona un Técnico:</label>
-                    <select id="filtro_tecnico_id" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-400 bg-gray-50">
+                    <select id="filtro_tecnico_id" onchange="filtrarHistorialTecnicos()" class="w-full p-2.5 border rounded focus:ring-2 focus:ring-blue-400 bg-gray-50">
                         <option value="">Todos los técnicos</option>
                     </select>
                 </div>
-                <div class="w-full md:w-1/4">
-                    <label class="block text-sm font-semibold mb-2">Desde (Fecha Entrada):</label>
-                    <input type="date" id="filtro_fecha_inicio" class="w-full p-2.5 border rounded bg-gray-50">
+                <div class="w-full md:w-1/3">
+                    <label class="block text-sm font-semibold mb-2">Desde :</label>
+                    <input type="date" id="filtro_fecha_inicio" onchange="filtrarHistorialTecnicos()" class="w-full p-2.5 border rounded bg-gray-50">
                 </div>
-                <div class="w-full md:w-1/4">
-                    <label class="block text-sm font-semibold mb-2">Hasta (Fecha):</label>
-                    <input type="date" id="filtro_fecha_fin" class="w-full p-2.5 border rounded bg-gray-50">
-                </div>
-                <div class="w-full md:w-auto flex-1">
-                    <button onclick="filtrarHistorialTecnicos()" class="w-full bg-blue-100 text-blue-700 px-6 py-2.5 rounded hover:bg-blue-200 transition font-semibold">🔄 Filtrar Avisos</button>
+                <div class="w-full md:w-1/3">
+                    <label class="block text-sm font-semibold mb-2">Hasta:</label>
+                    <input type="date" id="filtro_fecha_fin" onchange="filtrarHistorialTecnicos()" class="w-full p-2.5 border rounded bg-gray-50">
                 </div>
             </div>
 
@@ -232,13 +227,176 @@
                             <th class="py-3 px-4 text-left whitespace-nowrap">Fecha Entrada</th>
                             <th class="py-3 px-4 text-left whitespace-nowrap">Técnico</th>
                             <th class="py-3 px-4 text-left whitespace-nowrap">Cliente</th>
-                            <th class="py-3 px-4 text-left whitespace-nowrap">Avería Registrada</th>
+                            <th class="py-3 px-4 text-left whitespace-nowrap">Estado</th>
                         </tr>
                         </thead>
                         <tbody id="tabla-historial-tecnico">
-                        <tr><td colspan="4" class="text-center py-8 text-gray-500">Selecciona filtros arriba y pulsa Filtrar Avisos.</td></tr>
+                        <tr><td colspan="4" class="text-center py-8 text-gray-500">Selecciona filtros arriba para ver el historial.</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="pantalla_gestion_clientes" class="pantalla-seccion hidden">
+            <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">Gestión de Clientes</h1>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title-cliente">Añadir Cliente</h2>
+                    <input type="hidden" id="gestion_cli_id">
+
+                    <label class="block text-sm mt-3 font-semibold">Nombre <span class="text-red-500">*</span></label>
+                    <input type="text" id="gestion_cli_nombre" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50">
+
+                    <label class="block text-sm mt-3 font-semibold">Email</label>
+                    <input type="email" id="gestion_cli_email" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50">
+
+                    <label class="block text-sm mt-3 font-semibold">Teléfono</label>
+                    <input type="text" id="gestion_cli_telefono" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50">
+
+                    <label class="block text-sm mt-3 font-semibold">Dirección</label>
+                    <input type="text" id="gestion_cli_direccion" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50">
+
+                    <div class="flex gap-2 mt-6">
+                        <button onclick="guardarClienteGestion()" class="flex-1 bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition font-semibold shadow-md">Guardar</button>
+                        <button onclick="limpiarFormClienteGestion()" type="button" class="flex-1 bg-gray-200 text-gray-700 p-2 rounded hover:bg-gray-300 transition font-semibold shadow-md">Limpiar</button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-1 lg:order-2">
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-600 mb-2">Buscar Cliente:</label>
+                        <div class="relative">
+                            <input type="text" id="buscador_gestion_clientes"
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 bg-gray-50 text-gray-800"
+                                   placeholder="Escribe nombre, email o teléfono..."
+                                   onkeyup="filtrarTablaGestionClientes()">
+                            <span class="absolute right-3 top-3 text-gray-400">🔍</span>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-xs font-bold tracking-wider">
+                                <th class="py-3 px-4 text-left whitespace-nowrap">Nombre / Email</th>
+                                <th class="py-3 px-4 text-left whitespace-nowrap">Contacto</th>
+                                <th class="py-3 px-4 text-center whitespace-nowrap">Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabla-gestion-clientes">
+                            <tr><td colspan="3" class="text-center py-8 text-gray-400 italic">Escribe en el buscador para encontrar un cliente...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pantalla_maquinas" class="pantalla-seccion hidden">
+            <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">Parque de Máquinas</h1>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title-maquina">Añadir Máquina</h2>
+                    <input type="hidden" id="maq_id">
+
+                    <label class="block text-sm mt-3 font-semibold">Modelo <span class="text-red-500">*</span></label>
+                    <input type="text" id="maq_modelo" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Ej: Konica Minolta C258">
+
+                    <label class="block text-sm mt-3 font-semibold">Número de Serie <span class="text-red-500">*</span></label>
+                    <input type="text" id="maq_sn" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Ej: A0ED021...">
+
+                    <label class="block text-sm mt-3 font-semibold">Asignar a Cliente</label>
+                    <div class="relative w-full mt-1">
+                        <input type="hidden" id="maq_cliente_id">
+                        <input type="text" id="maq_cliente_search" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Buscar cliente o dejar en blanco para Taller..." autocomplete="off" onkeyup="filtrarClientes('maq_cliente_search', 'maq_cliente_dropdown', seleccionarClienteMaquina)">
+                        <ul id="maq_cliente_dropdown" class="absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-48 overflow-y-auto shadow-xl"></ul>
+                    </div>
+
+                    <div class="flex gap-2 mt-6">
+                        <button onclick="guardarMaquina()" class="flex-1 bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition font-semibold shadow-md">Guardar</button>
+                        <button onclick="limpiarFormMaquina()" type="button" class="flex-1 bg-gray-200 text-gray-700 p-2 rounded hover:bg-gray-300 transition font-semibold shadow-md">Limpiar</button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-1 lg:order-2">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
+                                <th class="py-3 px-4 text-left whitespace-nowrap">Modelo / S.N.</th>
+                                <th class="py-3 px-4 text-left whitespace-nowrap">Cliente Asignado</th>
+                                <th class="py-3 px-4 text-center whitespace-nowrap">Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabla-maquinas">
+                            <tr><td colspan="3" class="text-center py-4">Cargando parque...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="pantalla_inventario" class="pantalla-seccion hidden">
+            <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">Inventario de Piezas</h1>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative">
+                    <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title-pieza">Añadir Pieza</h2>
+                    <input type="hidden" id="inv_id">
+
+                    <label class="block text-sm mt-3 font-semibold">Referencia <span class="text-red-500">*</span></label>
+                    <input type="text" id="inv_ref" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Ej: A0ED021...">
+
+                    <label class="block text-sm mt-3 font-semibold">Descripción <span class="text-red-500">*</span></label>
+                    <input type="text" id="inv_desc" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Ej: Tambor Cian">
+
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm mt-3 font-semibold">Stock</label>
+                            <input type="number" id="inv_stock" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" value="0">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm mt-3 font-semibold">Precio (€)</label>
+                            <input type="number" step="0.01" id="inv_precio" class="w-full p-2 border rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50" value="0.00">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 mt-6">
+                        <button onclick="guardarPiezaInventario()" class="flex-1 bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition font-semibold shadow-md">Guardar</button>
+                        <button onclick="limpiarFormPieza()" type="button" class="flex-1 bg-gray-200 text-gray-700 p-2 rounded hover:bg-gray-300 transition font-semibold shadow-md">Limpiar</button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-1 lg:order-2">
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-600 mb-2">Buscar Pieza en Inventario:</label>
+                        <div class="relative">
+                            <input type="text" id="buscador_inventario"
+                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 bg-gray-50 text-gray-800"
+                                   placeholder="Escribe la referencia o descripción (ej: Tambor Cian)..."
+                                   onkeyup="filtrarTablaInventario()">
+                            <span class="absolute right-3 top-3 text-gray-400">🔍</span>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead>
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
+                                <th class="py-3 px-4 text-left whitespace-nowrap">Ref / Desc</th>
+                                <th class="py-3 px-4 text-center whitespace-nowrap">Stock / Precio</th>
+                                <th class="py-3 px-4 text-center whitespace-nowrap">Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabla-inventario">
+                            <tr><td colspan="3" class="text-center py-8 text-gray-400 italic">Escribe en el buscador para encontrar una pieza...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -317,9 +475,12 @@
         <div class="mt-6 border-t pt-4">
             <h3 class="text-lg font-bold text-blue-800 mb-3">🛠️ Piezas Utilizadas</h3>
 
-            <div class="flex flex-col sm:flex-row gap-2 mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
-                <input type="text" id="add_pieza_ref" placeholder="Ref. / Código" class="flex-1 p-2 border rounded text-sm">
-                <input type="text" id="add_pieza_desc" placeholder="Descripción de la pieza" class="flex-[2] p-2 border rounded text-sm">
+            <div class="flex flex-col sm:flex-row gap-2 mb-4 bg-blue-50 p-3 rounded-lg border border-blue-100 relative overflow-visible">
+                <div class="relative flex-1">
+                    <input type="text" id="add_pieza_ref" placeholder="Ref. / Código (Buscar...)" autocomplete="off" onkeyup="buscarPiezaModal()" class="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-400">
+                    <ul id="dropdown_piezas_modal" class="absolute z-50 w-full bg-white border border-gray-300 rounded mt-1 hidden max-h-40 overflow-y-auto shadow-2xl text-sm"></ul>
+                </div>
+                <input type="text" id="add_pieza_desc" placeholder="Descripción de la pieza" class="flex-[2] p-2 border rounded text-sm bg-gray-100" readonly>
                 <input type="number" id="add_pieza_cant" placeholder="Cant." value="1" min="1" class="w-20 p-2 border rounded text-sm">
                 <button type="button" onclick="agregarPiezaLista()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-bold text-sm">Añadir</button>
             </div>

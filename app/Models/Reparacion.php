@@ -9,9 +9,10 @@ class Reparacion extends Model
     protected $table = 'reparaciones';
 
     protected $fillable = [
-        'marca_id',
+        // 'marca_id', // Ya no lo uso, ahora asigno una de las maquinas que tiene el cliente
         'tecnico_id',
         'cliente_id',
+        'maquina_id',
         'descripcion',
         'fecha_entrada',
         'estado',
@@ -23,12 +24,19 @@ class Reparacion extends Model
         'fecha_cierre'
     ];
 
+    // <-- 2. NUEVA RELACIÓN CON MÁQUINAS
+    public function maquina()
+    {
+        return $this->belongsTo(Maquina::class);
+    }
 
+    /* Podemos mantener esta relación por si tienes avisos viejos
+    con marca, pero ya no es necesaria para los nuevos.
+    */
     public function marca()
     {
         return $this->belongsTo(Marca::class);
     }
-
 
     public function tecnico()
     {
