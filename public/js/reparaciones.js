@@ -2,7 +2,6 @@
 // 🛠️ REPARACIONES.JS - MOTOR PRINCIPAL
 // ==========================================================================
 import { token, AppState, cargarPiezas } from './api.js';
-// AÑADIDO: Importamos nuestra nueva fábrica de insignias
 import { mostrarMapaDeTabla, setFechaHoy, obtenerBadgeEstado } from './ui.js';
 import { seleccionarClienteReparacion } from './clientes.js';
 
@@ -28,14 +27,11 @@ export function cambiarPaginaReparaciones(direccion) {
 }
 
 // --- HISTORIALES ---
-
 export function cargarHistorialCliente(cliente) {
     AppState.clienteHistorialActual = cliente;
     const divFiltros = document.getElementById('filtros_fechas_cliente');
     if (divFiltros) divFiltros.classList.remove('hidden');
     document.getElementById('titulo_historial_cliente').innerText = `Avisos de: ${cliente.nombre}`;
-
-    // Al cargar el cliente, aplicamos el filtro por si ya había fechas
     aplicarFiltroFechasCliente();
 }
 
@@ -45,19 +41,16 @@ export function aplicarFiltroFechasCliente() {
     if (!tbody) return;
 
     tbody.innerHTML = '';
-
     const fechaInicio = document.getElementById('filtro_cli_fecha_inicio').value;
     const fechaFin = document.getElementById('filtro_cli_fecha_fin').value;
 
-    // --- NUEVO SEGURO: Bloquear la carga si no hay cliente o no hay fechas ---
     if (!cliente || !fechaInicio || !fechaFin) {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500 italic">Selecciona un cliente y define fecha de inicio y fin para ver el historial.</td></tr>`;
-        return; // Detenemos la función aquí
+        return;
     }
 
     let historial = AppState.todasLasReparaciones.filter(rep => rep.cliente_id === cliente.id);
 
-    // Filtramos estrictamente por el rango de fechas
     historial = historial.filter(rep => {
         let f = rep.fecha_cierre || rep.fecha_entrada || rep.created_at?.substring(0,10);
         return f >= fechaInicio && f <= fechaFin;
@@ -98,10 +91,9 @@ export function filtrarHistorialTecnicos() {
 
     tbody.innerHTML = '';
 
-    // --- NUEVO SEGURO: Bloquear la carga si falta ALGUNA de las dos fechas ---
     if (!fechaInicio || !fechaFin) {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500 italic">Selecciona fecha de inicio y fin para ver el historial del técnico.</td></tr>`;
-        return; // Detenemos la función aquí
+        return;
     }
 
     let filtrados = AppState.todasLasReparaciones;
@@ -155,7 +147,7 @@ export async function asignarmeAviso(id) {
             body: JSON.stringify(datos)
         });
         if (res.ok) {
-            await cargarReparaciones(true); // Forzamos carga
+            await cargarReparaciones(true);
             document.getElementById('btn-menu-reparaciones').click();
         }
     } catch (error) { console.error(error); }
@@ -178,7 +170,7 @@ export async function cambiarEstadoRapido(id, nuevoEstado) {
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(datos)
         });
-        if (res.ok) await cargarReparaciones(true); // Forzamos carga
+        if (res.ok) await cargarReparaciones(true);
     } catch (error) { console.error(error); }
 }
 
@@ -290,7 +282,7 @@ export async function guardarFinalizacion() {
         });
         if (res.ok) {
             cerrarModalFinalizar();
-            await cargarReparaciones(true); // Forzamos carga
+            await cargarReparaciones(true);
             await cargarPiezas();
         } else alert("Error al cerrar el aviso.");
     } catch (error) { console.error(error); }
@@ -312,15 +304,17 @@ export async function cargarReparaciones(forzar = false) {
         const data = await res.json();
         AppState.todasLasReparaciones = data.sort((a,b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id));
 
+        // 🛡️ Novedad: Si es técnico, por defecto que vea la pestaña 'En proceso'
+        if (!window.filtroInicializado) {
+            filtroEstadoReparaciones = (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') ? 'en proceso' : 'pendiente';
+            window.filtroInicializado = true;
+        }
+
         let pendientes = 0, proceso = 0, terminado = 0;
         const tbodyLibres = document.getElementById('tabla-avisos-libres');
         if(tbodyLibres) tbodyLibres.innerHTML = '';
 
         AppState.todasLasReparaciones.forEach(rep => {
-            if (rep.estado === 'pendiente') pendientes++;
-            if (rep.estado === 'en proceso') proceso++;
-            if (rep.estado === 'terminado') terminado++;
-
             let fechaFormateada = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
 
             // Llenar tabla de "Avisos Libres"
@@ -336,13 +330,23 @@ export async function cargarReparaciones(forzar = false) {
                     <td class="p-4 text-center"><button onclick="asignarmeAviso(${rep.id})" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg font-bold shadow hover:bg-yellow-500 transition hover:scale-105">▶️ Coger Aviso</button></td>
                 </tr>`;
             }
+
+            // 🛡️ Novedad: Filtramos los contadores. Si eres técnico, solo sumas los tuyos.
+            const esMio = (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico')
+                ? (rep.tecnico_id == AppState.usuarioActual.id)
+                : true;
+
+            if (esMio) {
+                if (rep.estado === 'pendiente') pendientes++;
+                if (rep.estado === 'en proceso') proceso++;
+                if (rep.estado === 'terminado') terminado++;
+            }
         });
 
         document.getElementById('stat-pendientes').innerText = pendientes;
         document.getElementById('stat-proceso').innerText = proceso;
         document.getElementById('stat-terminado').innerText = terminado;
 
-        // DIBUJAMOS LA TABLA CON LOS FILTROS Y PAGINACIÓN ACTUAL
         renderizarTablaReparaciones();
 
         if (!window.intervaloRealTime) {
@@ -368,30 +372,32 @@ export function renderizarTablaReparaciones() {
 
     tbodyPrincipal.innerHTML = '';
 
-    // --- NUEVO: Efecto visual de iluminación en las tarjetas ---
     ['pendiente', 'en proceso', 'terminado'].forEach(estado => {
         const id = `tarjeta-${estado.replace(' ', '-')}`;
         const tarjeta = document.getElementById(id);
         if (tarjeta) {
             if (filtroEstadoReparaciones === estado) {
-                // Tarjeta Activa (Más opaca y con borde blanco)
                 tarjeta.classList.add('bg-white/30', 'border-white/50');
                 tarjeta.classList.remove('bg-white/10', 'border-transparent');
             } else {
-                // Tarjeta Inactiva (Translúcida normal)
                 tarjeta.classList.add('bg-white/10', 'border-transparent');
                 tarjeta.classList.remove('bg-white/30', 'border-white/50');
             }
         }
     });
 
-    // 1. Filtrar
     let filtradas = AppState.todasLasReparaciones;
+
+    // 🛡️ Novedad: El técnico solo ve en su tabla sus propios avisos
+    if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
+        filtradas = filtradas.filter(rep => rep.tecnico_id == AppState.usuarioActual.id);
+    }
+
+    // Filtrar por pestaña pulsada
     if (filtroEstadoReparaciones !== 'todos') {
         filtradas = filtradas.filter(rep => rep.estado === filtroEstadoReparaciones);
     }
 
-    // 2. Paginar
     const totalItems = filtradas.length;
     const totalPaginas = Math.ceil(totalItems / itemsPorPaginaReparaciones) || 1;
 
@@ -402,7 +408,6 @@ export function renderizarTablaReparaciones() {
     const fin = inicio + itemsPorPaginaReparaciones;
     const paginadas = filtradas.slice(inicio, fin);
 
-    // 3. Pintar
     if (paginadas.length === 0) {
         tbodyPrincipal.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500 italic">No hay avisos para mostrar.</td></tr>`;
     } else {
@@ -455,7 +460,6 @@ export function renderizarTablaReparaciones() {
         });
     }
 
-    // 4. Actualizar botones de paginación
     const divPaginacion = document.getElementById('paginacion-reparaciones');
     if (divPaginacion) {
         divPaginacion.classList.remove('hidden');
@@ -470,22 +474,46 @@ export async function guardarReparacion() {
     const id = document.getElementById('rep-id').value;
     const tecnicoSeleccionado = document.getElementById('tecnico_id').value;
     const maquinaSeleccionada = document.getElementById('reparacion_maquina_id').value;
+
+    // Cambiamos el const por let para poder modificar la fecha si está vacía
+    let fechaIngresada = document.getElementById('fecha_entrada').value;
+    let estadoSeleccionado = document.getElementById('estado').value;
+
+    if (!document.getElementById('cliente_id').value) return alert('Selecciona un cliente para el aviso.');
+
+    // 🛡️ Novedad: Si la fecha está vacía, le asignamos automáticamente la de hoy
+    if (!fechaIngresada) {
+        fechaIngresada = new Date().toISOString().split('T')[0];
+    }
+
+    // 🛡️ Reglas de estado automáticas
+    if (tecnicoSeleccionado === "") {
+        estadoSeleccionado = 'pendiente'; // Si no hay técnico, por fuerza es pendiente
+    } else {
+        // Si le has asignado técnico y estaba en pendiente, pasa a en proceso
+        if (estadoSeleccionado === 'pendiente') {
+            estadoSeleccionado = 'en proceso';
+        }
+    }
+
     const datos = {
         cliente_id: document.getElementById('cliente_id').value,
         tecnico_id: tecnicoSeleccionado === "" ? null : tecnicoSeleccionado,
         maquina_id: maquinaSeleccionada === "" ? null : maquinaSeleccionada,
         descripcion: document.getElementById('descripcion').value,
-        fecha_entrada: document.getElementById('fecha_entrada').value,
-        estado: document.getElementById('estado').value
+        fecha_entrada: fechaIngresada,
+        estado: estadoSeleccionado
     };
-    if (!datos.cliente_id) return alert('Selecciona un cliente para el aviso.');
+
     const url = id ? `/api/reparaciones/${id}` : '/api/reparaciones';
+
     try {
         const res = await fetch(url, {
             method: id ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(datos)
         });
+
         if (res.ok) {
             limpiarFormulario();
             if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
@@ -493,9 +521,13 @@ export async function guardarReparacion() {
                 document.getElementById('caja-tabla-reparaciones').classList.remove('lg:col-span-2');
                 document.getElementById('caja-tabla-reparaciones').classList.add('col-span-1', 'lg:col-span-3');
             }
-            await cargarReparaciones(true); // Forzamos carga
+            await cargarReparaciones(true);
+        } else {
+            const errorHtml = await res.text();
+            console.error("🔥 ERROR DEL SERVIDOR (LARAVEL):", errorHtml);
+            alert("El servidor ha rechazado los datos. Revisa la consola (F12) para ver el motivo exacto.");
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { console.error("Fallo de conexión:", error); }
 }
 
 export function editarReparacion(repCodificada) {
@@ -537,7 +569,7 @@ export async function borrarReparacion(id) {
             if (document.getElementById('rep-id').value == id) {
                 limpiarFormulario();
             }
-            await cargarReparaciones(true); // Forzamos carga
+            await cargarReparaciones(true);
         }
     } catch (error) { console.error(error); }
 }
