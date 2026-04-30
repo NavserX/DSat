@@ -17,7 +17,7 @@
 
         <div class="mb-4 lg:mb-10 flex flex-row lg:flex-col items-center lg:items-start justify-between">
             <div class="flex items-center lg:flex-col lg:items-start">
-                <img src="{{ asset('img/logo-web-ofimatica-digital2.webp') }}" class="w-32 lg:w-40 mr-4 lg:mr-0 lg:mb-4" alt="Logo" onerror="this.style.display='none'">
+                <img src="{{ asset('img/logo-web-ofimatica-digital2.webp') }}" class="w-40 lg:w-48 mr-4 lg:mr-0 lg:mb-4" alt="Logo" onerror="this.style.display='none'">
                 <h2 class="text-base lg:text-lg font-semibold text-blue-300">Panel Técnico</h2>
             </div>
             <button onclick="logout()" class="block lg:hidden bg-red-600 text-sm px-4 py-2 rounded hover:bg-red-700 transition">

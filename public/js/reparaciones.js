@@ -7,7 +7,7 @@ import { mostrarMapaDeTabla, setFechaHoy, obtenerBadgeEstado } from './ui.js';
 import { seleccionarClienteReparacion } from './clientes.js';
 
 // --- VARIABLES DE PAGINACIÓN ---
-export let filtroEstadoReparaciones = 'todos';
+export let filtroEstadoReparaciones = 'pendiente';
 export let paginaActualReparaciones = 1;
 export const itemsPorPaginaReparaciones = 5;
 
