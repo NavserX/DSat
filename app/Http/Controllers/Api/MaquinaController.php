@@ -25,15 +25,17 @@ class MaquinaController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Validamos que no nos manden campos vacíos por error
+        // Validamos que el número de serie sea obligatorio y ÚNICO en la tabla maquinas
         $request->validate([
-            'modelo' => 'required|string|max:255',
-            'numero_serie' => 'required|string|max:255',
-            'cliente_id' => 'nullable|integer'
+            'modelo' => 'required|string',
+            'numero_serie' => 'required|string|unique:maquinas,numero_serie',
+            'cliente_id' => 'nullable|exists:clientes,id',
+        ], [
+            'numero_serie.unique' => 'Esta máquina ya está registrada en el sistema.'
         ]);
 
-        // 2. Creamos la máquina en la base de datos y la devolvemos al frontend
-        return Maquina::create($request->all());
+        $maquina = Maquina::create($request->all());
+        return response()->json($maquina, 201);
     }
 
     /**

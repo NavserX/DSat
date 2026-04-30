@@ -2,7 +2,8 @@
 // 🛠️ REPARACIONES.JS - MOTOR PRINCIPAL
 // ==========================================================================
 import { token, AppState, cargarPiezas } from './api.js';
-import { mostrarMapaDeTabla, setFechaHoy } from './ui.js';
+// AÑADIDO: Importamos nuestra nueva fábrica de insignias
+import { mostrarMapaDeTabla, setFechaHoy, obtenerBadgeEstado } from './ui.js';
 import { seleccionarClienteReparacion } from './clientes.js';
 
 // --- VARIABLES DE PAGINACIÓN ---
@@ -73,20 +74,13 @@ export function aplicarFiltroFechasCliente() {
                 ? `<button onclick="generarPDFReparacion('${repCodificada}')" class="text-gray-600 p-1 hover:scale-125 transition ml-2" title="Imprimir">🖨️</button>`
                 : '';
 
-            // Definimos el color según el estado
-            let colorEstado = {
-                pendiente: 'text-yellow-600',
-                "en proceso": 'text-blue-600',
-                terminado: 'text-green-600'
-            }[rep.estado] || 'text-gray-600';
-
             tbody.innerHTML += `
             <tr class="border-b hover:bg-blue-100 transition cursor-pointer">
                 <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')">${fecha}</td>
                 <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')"><strong>${rep.maquina?.modelo || 'Sin máquina'}</strong></td>
                 <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')">${rep.tecnico?.nombre || 'N/A'}</td>
-                <td class="py-3 px-4 font-bold flex items-center justify-between ${colorEstado}">
-                    <span onclick="verDetalleReparacion('${repCodificada}')" class="uppercase text-xs px-2 py-1 bg-white rounded shadow-sm border">${rep.estado}</span>
+                <td class="py-3 px-4 font-bold flex items-center justify-between">
+                    <span onclick="verDetalleReparacion('${repCodificada}')">${obtenerBadgeEstado(rep.estado)}</span>
                     ${btnImprimir}
                 </td>
             </tr>`;
@@ -129,20 +123,13 @@ export function filtrarHistorialTecnicos() {
             ? `<button onclick="generarPDFReparacion('${repCodificada}')" class="text-gray-600 p-1 hover:scale-125 transition ml-2" title="Imprimir">🖨️</button>`
             : '';
 
-        // Definimos el color según el estado
-        let colorEstado = {
-            pendiente: 'text-yellow-600',
-            "en proceso": 'text-blue-600',
-            terminado: 'text-green-600'
-        }[rep.estado] || 'text-gray-600';
-
         tbody.innerHTML += `
         <tr class="border-b hover:bg-blue-100 transition cursor-pointer">
             <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')">${fecha}</td>
             <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')">${rep.tecnico?.nombre || 'N/A'}</td>
             <td class="py-3 px-4" onclick="verDetalleReparacion('${repCodificada}')">${rep.cliente?.nombre || 'S/N'}</td>
-            <td class="py-3 px-4 font-bold flex items-center justify-between ${colorEstado}">
-                <span onclick="verDetalleReparacion('${repCodificada}')" class="uppercase text-xs px-2 py-1 bg-white rounded shadow-sm border">${rep.estado}</span>
+            <td class="py-3 px-4 font-bold flex items-center justify-between">
+                <span onclick="verDetalleReparacion('${repCodificada}')">${obtenerBadgeEstado(rep.estado)}</span>
                 ${btnImprimir}
             </td>
         </tr>`;
@@ -400,7 +387,7 @@ export function renderizarTablaReparaciones() {
 
     // 1. Filtrar
     let filtradas = AppState.todasLasReparaciones;
-    if (filtroEstadoReparaciones !== 'pendiente') {
+    if (filtroEstadoReparaciones !== 'todos') {
         filtradas = filtradas.filter(rep => rep.estado === filtroEstadoReparaciones);
     }
 
@@ -421,7 +408,6 @@ export function renderizarTablaReparaciones() {
     } else {
         paginadas.forEach(rep => {
             let fechaFormateada = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
-            let color = { pendiente: 'bg-yellow-100 text-yellow-700', "en proceso": 'bg-blue-100 text-blue-700', terminado: 'bg-green-100 text-green-700' }[rep.estado];
             const repCodificada = encodeURIComponent(JSON.stringify(rep));
 
             let btnMapa = rep.cliente?.direccion ? `<button type="button" onclick="mostrarMapaDeTabla('${encodeURIComponent(rep.cliente.direccion)}')" class="text-green-600 p-2 hover:scale-125 inline-block">📍</button>` : '';
@@ -460,7 +446,7 @@ export function renderizarTablaReparaciones() {
                     ${infoMaquina}
                     <div class="text-xs mt-1 font-bold ${rep.tecnico_id ? 'text-purple-600' : 'text-gray-400'}">👷 ${rep.tecnico?.nombre || 'Sin asignar'}</div>
                 </td>
-                <td class="pt-4 pb-2 px-4 whitespace-nowrap align-top"><span class="px-3 py-1 rounded-full text-xs font-bold ${color}">${rep.estado}</span></td>
+                <td class="pt-4 pb-2 px-4 whitespace-nowrap align-top">${obtenerBadgeEstado(rep.estado)}</td>
                 <td class="pt-4 pb-2 px-4 text-center whitespace-nowrap align-top">${btnEstadoRapido}${btnLlamar}${btnMapa}${btnImprimir}${btnEditar}${btnBorrar}</td>
             </tr>
             <tr class="border-b hover:bg-blue-50/30 transition">
@@ -620,7 +606,7 @@ export function generarPDFReparacion(repCodificada) {
     const piezas = typeof rep.piezas_utilizadas === 'string' ? JSON.parse(rep.piezas_utilizadas) : (rep.piezas_utilizadas || []);
 
     const dominio = window.location.origin;
-    const logoUrl = dominio + '/img/logo-web-ofimatica-digital2.webp';
+    const logoUrl = dominio + '/img/logo-web-ofimatica-digital.webp';
 
     let piezasHTML = '';
     if (piezas.length > 0) {
@@ -636,7 +622,7 @@ export function generarPDFReparacion(repCodificada) {
     ventimp.document.write('<html><head><title>Parte #' + rep.id + '</title>');
     ventimp.document.write('<style>body{font-family:sans-serif;padding:40px;color:#333;}.header{display:flex;justify-content:space-between;border-bottom:2px solid #2563eb;padding-bottom:10px;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;}.caja{border:1px solid #e5e7eb;padding:10px;border-radius:5px;}h3{border-left:4px solid #2563eb;padding-left:10px;color:#1e3a8a;}table{width:100%;border-collapse:collapse;}th{background:#f9fafb;text-align:left;padding:8px;border-bottom:1px solid #ddd;}td{padding:8px;border-bottom:1px solid #eee;}.footer{margin-top:50px;display:flex;justify-content:space-between;}.firma{width:200px;border-top:1px solid #333;text-align:center;padding-top:10px;}</style></head><body>');
 
-    ventimp.document.write('<div class="header"><div><img src="' + logoUrl + '" style="max-width: 200px; height: auto;" alt="Digital Soluciones"></div><div style="text-align:right"><h3>PARTE DE TRABAJO</h3><p>Aviso: #' + rep.id + '</p></div></div>');
+    ventimp.document.write('<div class="header"><div><img src="' + logoUrl + '" style="max-width: 350px; height: auto;" alt="Digital Soluciones"></div><div style="text-align:right"><h3>PARTE DE TRABAJO</h3><p>Aviso: #' + rep.id + '</p></div></div>');
 
     ventimp.document.write('<div class="grid"><div class="caja"><strong>Cliente:</strong><br>' + (rep.cliente?.nombre || 'S/N') + '<br>' + (rep.cliente?.direccion || '') + '</div>');
     ventimp.document.write('<div class="caja"><strong>Fecha:</strong> ' + fechaCierreVal + '<br><strong>Técnico:</strong> ' + (rep.tecnico?.nombre || 'N/A') + '</div></div>');

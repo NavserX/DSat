@@ -48,7 +48,6 @@ export async function guardarMaquina() {
 
     if (!modelo || !numero_serie) return alert('El modelo y número de serie son obligatorios.');
 
-    // Si el administrador ha borrado el texto del buscador, desasignamos la máquina
     const clienteFinal = (search_input.trim() === '') ? null : cliente_id;
 
     const datos = {
@@ -58,18 +57,46 @@ export async function guardarMaquina() {
     };
 
     const url = id ? `/api/maquinas/${id}` : '/api/maquinas';
+
     try {
         const res = await fetch(url, {
             method: id ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Authorization': `Bearer ${token}` },
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify(datos)
         });
 
         if (res.ok) {
+            alert("Máquina guardada correctamente.");
+
+            // 1. Limpiamos y recargamos datos
             limpiarFormMaquina();
             await cargarMaquinas();
-        } else { alert("Error al guardar la máquina en el servidor."); }
-    } catch (error) { console.error(error); }
+
+            // 2. Intentamos cambiar de pantalla sin romper el código
+            const seccionDestino = 'pantalla_maquinas';
+            if (document.getElementById(seccionDestino)) {
+                mostrarPantalla(seccionDestino);
+            } else {
+                // Si el ID no existe, forzamos la recarga para que el usuario vea los cambios
+                console.warn(`La sección ${seccionDestino} no existe. Recargando página...`);
+                window.location.reload();
+            }
+        } else {
+            const errorRes = await res.json();
+            if (res.status === 422) {
+                alert("⚠️ Error: " + (errorRes.errors.numero_serie ? "Este número de serie ya está registrado." : "Datos inválidos."));
+            } else {
+                alert("Error en el servidor al guardar.");
+            }
+        }
+    } catch (error) {
+        console.error("Error en la petición:", error);
+        alert("Fallo de conexión con el servidor.");
+    }
 }
 
 export function editarMaquina(maqCodificada) {

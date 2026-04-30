@@ -41,15 +41,45 @@ export function adaptarInterfazAlRol() {
 }
 
 export function mostrarPantalla(idPantalla, botonClicado) {
-    document.querySelectorAll('.pantalla-seccion').forEach(div => div.classList.add('hidden'));
-    document.getElementById(idPantalla).classList.remove('hidden');
+    // 1. Ocultar todas las pantallas y prepararlas para la animación
+    document.querySelectorAll('.pantalla-seccion').forEach(div => {
+        if(div) {
+            div.classList.add('hidden');
+            // Las "escondemos" un poquito más abajo y transparentes
+            div.style.opacity = '0';
+            div.style.transform = 'translateY(15px)';
+        }
+    });
 
+    // 2. Mostrar la pantalla de destino con el efecto
+    const pantallaDestino = document.getElementById(idPantalla);
+    if (pantallaDestino) {
+        // Le quitamos el display:none
+        pantallaDestino.classList.remove('hidden');
+
+        // TRUCO: Le damos 10 milisegundos al navegador para que asimile que
+        // ya no está oculta, y entonces disparamos la animación
+        setTimeout(() => {
+            pantallaDestino.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            pantallaDestino.style.opacity = '1';
+            pantallaDestino.style.transform = 'translateY(0)';
+        }, 10);
+
+    } else {
+        console.warn(`Ojo: No se encontró la pantalla con ID: ${idPantalla}`);
+    }
+
+    // 3. Resetear el diseño de todos los botones del menú
     document.querySelectorAll('.menu-btn').forEach(btn => {
         btn.classList.remove('bg-blue-600', 'border-l-4');
         btn.classList.add('hover:bg-slate-800');
     });
-    botonClicado.classList.remove('hover:bg-slate-800');
-    botonClicado.classList.add('bg-blue-600');
+
+    // 4. Solo aplicamos el estilo de "clicado" si realmente se le pasó un botón
+    if (botonClicado) {
+        botonClicado.classList.remove('hover:bg-slate-800');
+        botonClicado.classList.add('bg-blue-600');
+    }
 }
 
 export function setFechaHoy() {
@@ -60,10 +90,10 @@ export function setFechaHoy() {
 
 export function mostrarMapaDeTabla(dir) {
     const map = document.getElementById('mapa_container');
-    // CORREGIDO: Formato correcto de la URL con template string de JS
-    document.getElementById('google_map_iframe').src = `https://maps.google.com/maps?q=${dir}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
-    document.getElementById('link_como_llegar').href = `https://maps.google.com/maps?q=${dir}`;
-    map.classList.remove('hidden');
+    // CORREGIDO: Enlace válido de Google Maps
+    document.getElementById('google_map_iframe').src = `https://maps.google.com/maps?q=${encodeURIComponent(dir)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+    document.getElementById('link_como_llegar').href = `https://maps.google.com/maps?q=${encodeURIComponent(dir)}`;
+    if (map) map.classList.remove('hidden');
 }
 
 // Cierra los desplegables al hacer clic fuera
@@ -78,3 +108,20 @@ document.addEventListener('click', function(e) {
         }
     });
 });
+
+// ==========================================================================
+// 🎨 NUEVO: FÁBRICA DE DISEÑO DE ESTADOS (BADGES)
+// ==========================================================================
+export function obtenerBadgeEstado(estado) {
+    const est = (estado || '').toLowerCase();
+
+    if (est === 'pendiente') {
+        return `<span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold capitalize">${est}</span>`;
+    } else if (est === 'en proceso') {
+        return `<span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold capitalize">${est}</span>`;
+    } else if (est === 'terminado') {
+        return `<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold capitalize">${est}</span>`;
+    } else {
+        return `<span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold capitalize">${est || 'N/A'}</span>`;
+    }
+}

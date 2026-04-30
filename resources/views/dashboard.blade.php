@@ -62,7 +62,7 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-                <div id="caja-formulario-reparacion" class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative">
+                <div id="caja-formulario-reparacion" class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-1 lg:order-1 relative">
                     <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title">Nueva Reparación</h2>
                     <input type="hidden" id="rep-id">
 
@@ -104,7 +104,7 @@
                     </div>
                 </div>
 
-                <div id="caja-tabla-reparaciones" class="lg:col-span-2 bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-1 lg:order-2">
+                <div id="caja-tabla-reparaciones" class="lg:col-span-2 bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-2">
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
                             <thead>
@@ -140,7 +140,7 @@
         </div>
 
         <div id="pantalla_libres" class="pantalla-seccion hidden">
-            <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-yellow-400">Bandeja de Avisos Libres</h1>
+            <h1 class="text-2xl lg:text-3xl font-bold mb-6 lg:mb-8 text-blue-300">Bandeja de Avisos Libres</h1>
             <p class="text-blue-200 mb-6">Avisos pendientes que aún no tienen ningún técnico asignado. Pulsa ▶️ para asignártelo y empezar a trabajar.</p>
 
             <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl">
@@ -322,6 +322,11 @@
                 </div>
 
                 <div class="lg:col-span-2 bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-1 lg:order-2">
+
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold mb-1 text-gray-700">Buscar Máquina:</label>
+                        <input type="text" id="buscador_maquinas" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Escribe el modelo o S/N...">
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full text-sm">
                             <thead>
