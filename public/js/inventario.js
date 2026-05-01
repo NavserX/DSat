@@ -64,8 +64,8 @@ export function filtrarTablaInventario() {
                 <div class="text-xs text-gray-500 mt-1">${p.precio} €</div>
             </td>
             <td class="py-3 px-4 text-center">
-                <button onclick="editarPieza('${pCod}')" class="text-blue-500 p-2 hover:scale-125 transition" title="Editar">Editar</button>
-                <button onclick="borrarPieza(${p.id})" class="text-red-500 p-2 hover:scale-125 transition" title="Borrar">Borrar</button>
+                <button onclick="editarPieza('${pCod}')" class="text-blue-500 p-2 hover:scale-125 transition" title="Editar pieza">✏️</button>
+                <button onclick="borrarPieza(${p.id})" class="text-red-500 p-2 hover:scale-125 transition" title="Borrar pieza">🗑️</button>
             </td>
         </tr>`;
     });
