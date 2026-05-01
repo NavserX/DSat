@@ -24,14 +24,13 @@ class Reparacion extends Model
         'fecha_cierre'
     ];
 
-    // <-- 2. NUEVA RELACIÓN CON MÁQUINAS
     public function maquina()
     {
         return $this->belongsTo(Maquina::class);
     }
 
-    /* Podemos mantener esta relación por si tienes avisos viejos
-    con marca, pero ya no es necesaria para los nuevos.
+    /* Mantengo esta relación por si quedan avisos viejos
+    con marca, pero ya no la necesito para los nuevos.
     */
     public function marca()
     {

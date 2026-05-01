@@ -1,17 +1,20 @@
 // ==========================================================================
-// 🛠️ REPARACIONES.JS - MOTOR PRINCIPAL
+// MOTOR PRINCIPAL
 // ==========================================================================
 import { token, AppState, cargarPiezas } from './api.js';
 import { mostrarMapaDeTabla, setFechaHoy, obtenerBadgeEstado } from './ui.js';
 import { seleccionarClienteReparacion } from './clientes.js';
 
-// --- VARIABLES DE PAGINACIÓN ---
+// --- VARIABLES DE PAGINACION ---
+// Uso estas variables para controlar la tabla principal. Guardo en que pestaña estoy (pendiente, en proceso o terminado), en que pagina me encuentro y cuantos avisos quiero ver por pagina de golpe.
 export let filtroEstadoReparaciones = 'pendiente';
 export let paginaActualReparaciones = 1;
 export const itemsPorPaginaReparaciones = 5;
 
-// --- FUNCIONES DE PAGINACIÓN Y FILTRADO ---
+// --- FUNCIONES DE PAGINACION Y FILTRADO ---
+
 export function filtrarPorEstado(estado) {
+    // Si pulso el boton del estado en el que ya estoy, lo desactivo y muestro "todos". Si pulso uno diferente, cambio a ese estado. Luego reinicio la pagina a la 1 para no quedarme en una pagina vacia y repinto la tabla.
     if (filtroEstadoReparaciones === estado) {
         filtroEstadoReparaciones = 'todos';
     } else {
@@ -22,12 +25,15 @@ export function filtrarPorEstado(estado) {
 }
 
 export function cambiarPaginaReparaciones(direccion) {
+    // Recibo un +1 o un -1 desde los botones de Siguiente o Anterior, se lo sumo a mi pagina actual y vuelvo a dibujar la tabla con los nuevos registros.
     paginaActualReparaciones += direccion;
     renderizarTablaReparaciones();
 }
 
 // --- HISTORIALES ---
+
 export function cargarHistorialCliente(cliente) {
+    // Me guardo globalmente de que cliente estoy consultando el historial, muestro el bloque de fechas y le aplico el filtro directamente por si ya habia fechas puestas.
     AppState.clienteHistorialActual = cliente;
     const divFiltros = document.getElementById('filtros_fechas_cliente');
     if (divFiltros) divFiltros.classList.remove('hidden');
@@ -36,6 +42,7 @@ export function cargarHistorialCliente(cliente) {
 }
 
 export function aplicarFiltroFechasCliente() {
+    // Recupero al cliente y vacio la tabla para prepararla.
     const cliente = AppState.clienteHistorialActual;
     const tbody = document.getElementById('tabla-historial-cliente');
     if (!tbody) return;
@@ -44,13 +51,16 @@ export function aplicarFiltroFechasCliente() {
     const fechaInicio = document.getElementById('filtro_cli_fecha_inicio').value;
     const fechaFin = document.getElementById('filtro_cli_fecha_fin').value;
 
+    // Si falta algun dato, aviso de que tienen que rellenarlo todo antes de buscar.
     if (!cliente || !fechaInicio || !fechaFin) {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500 italic">Selecciona un cliente y define fecha de inicio y fin para ver el historial.</td></tr>`;
         return;
     }
 
+    // Busco en mi cajon global de reparaciones solo las que sean de este cliente.
     let historial = AppState.todasLasReparaciones.filter(rep => rep.cliente_id === cliente.id);
 
+    // Vuelvo a filtrar ese resultado quedandome solo con las reparaciones que encajen entre las dos fechas que he puesto. Doy prioridad a la fecha de cierre si existe.
     historial = historial.filter(rep => {
         let f = rep.fecha_cierre || rep.fecha_entrada || rep.created_at?.substring(0,10);
         return f >= fechaInicio && f <= fechaFin;
@@ -59,6 +69,7 @@ export function aplicarFiltroFechasCliente() {
     if(historial.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-500">No hay historial para este cliente en las fechas indicadas.</td></tr>`;
     } else {
+        // Si tengo resultados, pinto las filas. Si el aviso esta terminado, le pego un boton extra para poder imprimir el PDF del parte de trabajo.
         historial.forEach(rep => {
             let fecha = rep.fecha_cierre || rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
             const repCodificada = encodeURIComponent(JSON.stringify(rep));
@@ -83,6 +94,7 @@ export function aplicarFiltroFechasCliente() {
 }
 
 export function filtrarHistorialTecnicos() {
+    // Funciona casi igual que el de clientes, pero uso los inputs de la pestaña de tecnicos.
     const tecId = document.getElementById('filtro_tecnico_id').value;
     const fechaInicio = document.getElementById('filtro_fecha_inicio').value;
     const fechaFin = document.getElementById('filtro_fecha_fin').value;
@@ -98,6 +110,7 @@ export function filtrarHistorialTecnicos() {
 
     let filtrados = AppState.todasLasReparaciones;
 
+    // Aplico los filtros en cascada.
     if (tecId) filtrados = filtrados.filter(rep => rep.tecnico_id == tecId);
     if (fechaInicio) filtrados = filtrados.filter(rep => (rep.fecha_cierre || rep.fecha_entrada || rep.created_at?.substring(0,10)) >= fechaInicio);
     if (fechaFin) filtrados = filtrados.filter(rep => (rep.fecha_cierre || rep.fecha_entrada || rep.created_at?.substring(0,10)) <= fechaFin);
@@ -128,8 +141,10 @@ export function filtrarHistorialTecnicos() {
     });
 }
 
-// --- ACCIONES RÁPIDAS ---
+// --- ACCIONES RAPIDAS ---
+
 export async function asignarmeAviso(id) {
+    // Busco el aviso libre y lo actualizo mandandole a la base de datos mi ID de tecnico. Ademas, lo muevo de "pendiente" a "en proceso" de un solo golpe.
     const rep = AppState.todasLasReparaciones.find(r => r.id === id);
     if (!rep) return;
     const datos = {
@@ -154,6 +169,7 @@ export async function asignarmeAviso(id) {
 }
 
 export async function cambiarEstadoRapido(id, nuevoEstado) {
+    // Esta funcion es para avanzar los estados con los botones rapidos de la tabla principal. Reutilizo la misma informacion del aviso, pero piso el estado.
     const rep = AppState.todasLasReparaciones.find(r => r.id === id);
     if (!rep) return;
     const datos = {
@@ -174,21 +190,28 @@ export async function cambiarEstadoRapido(id, nuevoEstado) {
     } catch (error) { console.error(error); }
 }
 
-// --- MODAL DE FINALIZACIÓN ---
+// --- MODAL DE FINALIZACION ---
+
 export function abrirModalFinalizar(id) {
+    // Preparo el cuadro para cerrar el aviso rellenando la fecha actual y la hora en la que he abierto el modal para ahorrarle teclear al tecnico.
     document.getElementById('fin_rep_id').value = id;
     document.getElementById('fin_rep_id_display').innerText = id;
     document.getElementById('fin_resolucion').value = '';
+
     const hoy = new Date().toISOString().split('T')[0];
     const ahora = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
     if(document.getElementById('fin_fecha_cierre')) document.getElementById('fin_fecha_cierre').value = hoy;
     if(document.getElementById('fin_hora_inicio')) document.getElementById('fin_hora_inicio').value = '';
     if(document.getElementById('fin_hora_fin')) document.getElementById('fin_hora_fin').value = ahora;
+
+    // Limpio la matriz virtual de piezas de cualquier cierre anterior.
     AppState.piezasTemporales = [];
     document.getElementById('add_pieza_ref').value = '';
     document.getElementById('add_pieza_desc').value = '';
     document.getElementById('add_pieza_cant').value = '1';
     dibujarTablaPiezas();
+
     document.getElementById('modal_finalizar').classList.remove('hidden');
 }
 
@@ -197,11 +220,14 @@ export function cerrarModalFinalizar() {
 }
 
 export function agregarPiezaLista() {
+    // Añado la pieza a mi carrito temporal y limpio las casillas por si quiere escanear otra.
     const ref = document.getElementById('add_pieza_ref').value;
     const desc = document.getElementById('add_pieza_desc').value;
     const cant = document.getElementById('add_pieza_cant').value;
     if(!desc) return alert("La descripción de la pieza es obligatoria");
+
     AppState.piezasTemporales.push({ referencia: ref, descripcion: desc, cantidad: cant });
+
     document.getElementById('add_pieza_ref').value = '';
     document.getElementById('add_pieza_desc').value = '';
     document.getElementById('add_pieza_desc').readOnly = false;
@@ -210,11 +236,13 @@ export function agregarPiezaLista() {
 }
 
 export function eliminarPiezaLista(index) {
+    // Si meto una pieza mal en el modal, la elimino usando su indice del array.
     AppState.piezasTemporales.splice(index, 1);
     dibujarTablaPiezas();
 }
 
 export function dibujarTablaPiezas() {
+    // Genero el listado visual de las piezas que estoy a punto de usar en esta reparacion.
     const tbody = document.getElementById('lista_piezas_tbody');
     tbody.innerHTML = '';
     if(AppState.piezasTemporales.length === 0) {
@@ -235,6 +263,7 @@ export function dibujarTablaPiezas() {
 }
 
 export async function guardarFinalizacion() {
+    // Recojo los datos clave del cierre. Me aseguro de que el tecnico me rellena como soluciono el problema y las horas invertidas.
     const id = document.getElementById('fin_rep_id').value;
     const resolucion = document.getElementById('fin_resolucion').value;
     const h_inicio = document.getElementById('fin_hora_inicio').value;
@@ -244,11 +273,15 @@ export async function guardarFinalizacion() {
     if(!resolucion) return alert("Por favor, describe el trabajo realizado.");
     if(!h_inicio || !h_fin || !f_cierre) return alert("Rellena todos los campos de horario.");
 
+    // Hago el calculo del tiempo total. Transformo las horas de texto a objetos de fecha reales y los resto.
     const inicioDate = new Date(`2026-01-01T${h_inicio}:00`);
     const finDate = new Date(`2026-01-01T${h_fin}:00`);
     const diffMs = finDate - inicioDate;
+
+    // Si la resta es negativa, significa que puso la hora de inicio despues de la de fin, asi que le aviso.
     if (diffMs < 0) return alert("La hora de salida no puede ser anterior a la de entrada.");
 
+    // Saco las horas y los minutos a partir de los milisegundos de diferencia.
     const diffHrs = Math.floor(diffMs / 3600000);
     const diffMins = Math.round(((diffMs % 3600000) / 60000));
     const tiempoEmpleo = `${diffHrs}h ${diffMins}min`;
@@ -256,6 +289,7 @@ export async function guardarFinalizacion() {
     const rep = AppState.todasLasReparaciones.find(r => r.id == id);
     if (!rep) return;
 
+    // Empaqueto la peticion completa. Convierto el array de piezas a un JSON en texto para que la base de datos se lo pueda tragar sin quejarse.
     const datos = {
         cliente_id: rep.cliente_id,
         tecnico_id: rep.tecnico_id || AppState.usuarioActual.id,
@@ -271,6 +305,7 @@ export async function guardarFinalizacion() {
         piezas_utilizadas: JSON.stringify(AppState.piezasTemporales)
     };
 
+    // Apago el boton para que no le den dobles clics y creen corrupcion de datos.
     const btn = document.querySelector('#modal_finalizar button.bg-green-600');
     btn.innerText = 'Cerrando...'; btn.disabled = true;
 
@@ -283,14 +318,16 @@ export async function guardarFinalizacion() {
         if (res.ok) {
             cerrarModalFinalizar();
             await cargarReparaciones(true);
-            await cargarPiezas();
+            await cargarPiezas(); // Recargo las piezas por si he consumido stock
         } else alert("Error al cerrar el aviso.");
     } catch (error) { console.error(error); }
     finally { btn.innerText = 'Cerrar Aviso'; btn.disabled = false; }
 }
 
 // --- CARGA DE TABLAS Y CRUD ---
+
 export async function cargarReparaciones(forzar = false) {
+    // Metodo core de la pantalla. Si estoy escribiendo no la recargo para no borrarme el texto a mi mismo. Si fuerzo la carga, ignoro esto.
     const editandoId = document.getElementById('rep-id').value;
     const escribiendoDesc = document.getElementById('descripcion').value;
     const modalFinVisible = !document.getElementById('modal_finalizar').classList.contains('hidden');
@@ -302,9 +339,11 @@ export async function cargarReparaciones(forzar = false) {
         if (!res.ok) throw new Error('Error al cargar');
 
         const data = await res.json();
+
+        // Reordeno los avisos cronologicamente para ver primero el mas reciente.
         AppState.todasLasReparaciones = data.sort((a,b) => new Date(b.created_at || b.id) - new Date(a.created_at || a.id));
 
-        // 🛡️ Novedad: Si es técnico, por defecto que vea la pestaña 'En proceso'
+        // Si soy tecnico, la primera vez que entro me posiciono automaticamente en la pestaña de "En Proceso" para no ver los huecos en blanco.
         if (!window.filtroInicializado) {
             filtroEstadoReparaciones = (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') ? 'en proceso' : 'pendiente';
             window.filtroInicializado = true;
@@ -317,7 +356,7 @@ export async function cargarReparaciones(forzar = false) {
         AppState.todasLasReparaciones.forEach(rep => {
             let fechaFormateada = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
 
-            // Llenar tabla de "Avisos Libres"
+            // Lleno primero la bandeja general de avisos huerfanos.
             if (rep.estado === 'pendiente' && !rep.tecnico_id && tbodyLibres) {
                 tbodyLibres.innerHTML += `
                 <tr class="hover:bg-yellow-50 transition border-b">
@@ -331,7 +370,7 @@ export async function cargarReparaciones(forzar = false) {
                 </tr>`;
             }
 
-            // 🛡️ Novedad: Filtramos los contadores. Si eres técnico, solo sumas los tuyos.
+            // Calculo los contadores globales para ponerlos en los widgets de arriba. Si soy tecnico, solo cuento las reparaciones que tengan mi nombre.
             const esMio = (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico')
                 ? (rep.tecnico_id == AppState.usuarioActual.id)
                 : true;
@@ -347,8 +386,10 @@ export async function cargarReparaciones(forzar = false) {
         document.getElementById('stat-proceso').innerText = proceso;
         document.getElementById('stat-terminado').innerText = terminado;
 
+        // Disparo la maquina de dibujado de la tabla, que tiene en cuenta la paginacion.
         renderizarTablaReparaciones();
 
+        // El pulso en segundo plano que vigila los cambios.
         if (!window.intervaloRealTime) {
             window.intervaloRealTime = setInterval(async () => {
                 const pRep = document.getElementById('pantalla_reparaciones');
@@ -366,12 +407,14 @@ export async function cargarReparaciones(forzar = false) {
 }
 
 // --- DIBUJAR TABLA (PAGINADA Y FILTRADA) ---
+
 export function renderizarTablaReparaciones() {
     const tbodyPrincipal = document.getElementById('tabla-reparaciones');
     if(!tbodyPrincipal) return;
 
     tbodyPrincipal.innerHTML = '';
 
+    // Modifico la opacidad y los bordes de los botones gigantes de arriba para marcar que pestaña tengo pulsada.
     ['pendiente', 'en proceso', 'terminado'].forEach(estado => {
         const id = `tarjeta-${estado.replace(' ', '-')}`;
         const tarjeta = document.getElementById(id);
@@ -388,22 +431,25 @@ export function renderizarTablaReparaciones() {
 
     let filtradas = AppState.todasLasReparaciones;
 
-    // 🛡️ Novedad: El técnico solo ve en su tabla sus propios avisos
+    // Si detecto que soy un tecnico, corto las alas a la tabla para que no cargue datos de otras personas.
     if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
         filtradas = filtradas.filter(rep => rep.tecnico_id == AppState.usuarioActual.id);
     }
 
-    // Filtrar por pestaña pulsada
+    // Filtro por pestaña activa (Pendientes, En Proceso, Terminados).
     if (filtroEstadoReparaciones !== 'todos') {
         filtradas = filtradas.filter(rep => rep.estado === filtroEstadoReparaciones);
     }
 
+    // Logica matematica para paginar. Calculo en que pagina caigo basandome en el tamaño del array y los avisos maximos permitidos.
     const totalItems = filtradas.length;
     const totalPaginas = Math.ceil(totalItems / itemsPorPaginaReparaciones) || 1;
 
+    // Prevencion de bugs: Si borro el ultimo elemento de la ultima pagina, me auto muevo a la anterior.
     if (paginaActualReparaciones > totalPaginas) paginaActualReparaciones = totalPaginas;
     if (paginaActualReparaciones < 1) paginaActualReparaciones = 1;
 
+    // Extraigo del array total solo los elementos que corresponden a la pagina en la que estoy.
     const inicio = (paginaActualReparaciones - 1) * itemsPorPaginaReparaciones;
     const fin = inicio + itemsPorPaginaReparaciones;
     const paginadas = filtradas.slice(inicio, fin);
@@ -421,11 +467,13 @@ export function renderizarTablaReparaciones() {
             let btnEditar = `<button onclick="editarReparacion('${repCodificada}')" class="text-blue-500 p-2 transition hover:scale-125 inline-block" title="Editar">✏️</button>`;
             let btnEstadoRapido = '';
 
+            // Solo enseño el boton de imprimir cuando el trabajo ya esta terminado.
             let btnImprimir = '';
             if (rep.estado === 'terminado') {
                 btnImprimir = `<button onclick="generarPDFReparacion('${repCodificada}')" class="text-gray-600 p-2 hover:scale-125 inline-block" title="Imprimir Parte">🖨️</button>`;
             }
 
+            // Bloqueo de UI por roles. Si soy tecnico apago la edicion y el borrado y les dejo sus botones de flujo de trabajo.
             if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
                 btnBorrar = ''; btnEditar = '';
                 if (rep.estado === 'pendiente') btnEstadoRapido = `<button onclick="cambiarEstadoRapido(${rep.id}, 'en proceso')" class="text-yellow-500 p-2 transition hover:scale-125 inline-block" title="Empezar a trabajar">▶️</button>`;
@@ -434,6 +482,7 @@ export function renderizarTablaReparaciones() {
                 if (rep.estado !== 'terminado') btnEstadoRapido = `<button onclick="abrirModalFinalizar(${rep.id})" class="text-green-500 p-2 transition hover:scale-125 inline-block" title="Finalizar aviso directamente">✅</button>`;
             }
 
+            // Regla de limpieza visual: El tecnico no debe ver avisos libres en su bandeja de "pendientes" personales.
             if(AppState.usuarioActual?.rol === 'tecnico' && rep.estado === 'pendiente' && !rep.tecnico_id) return;
 
             let cajitaResolucion = '';
@@ -443,6 +492,7 @@ export function renderizarTablaReparaciones() {
 
             let infoMaquina = rep.maquina_id && rep.maquina ? `<div class="text-xs mt-1 text-teal-600 font-bold">🖨️ ${rep.maquina.modelo}</div>` : '';
 
+            // Hago el inyectado dinamico a la tabla.
             tbodyPrincipal.innerHTML += `
             <tr class="hover:bg-blue-50/30 transition">
                 <td class="pt-4 pb-2 px-4 whitespace-nowrap align-top"><div class="font-bold text-blue-600 text-base">#${rep.id}</div><div class="text-gray-500 text-xs mt-1">📅 ${fechaFormateada}</div></td>
@@ -460,6 +510,7 @@ export function renderizarTablaReparaciones() {
         });
     }
 
+    // Gestion de la UI de los botones de Paginacion. Me aseguro de deshabilitar el boton de volver si estoy en la 1, y el de avanzar si estoy en el final.
     const divPaginacion = document.getElementById('paginacion-reparaciones');
     if (divPaginacion) {
         divPaginacion.classList.remove('hidden');
@@ -471,26 +522,25 @@ export function renderizarTablaReparaciones() {
 }
 
 export async function guardarReparacion() {
+    // Para guardar recojo los identificadores, incluyendo el de la maquina y el tecnico al que se le ha asignado la averia.
     const id = document.getElementById('rep-id').value;
     const tecnicoSeleccionado = document.getElementById('tecnico_id').value;
     const maquinaSeleccionada = document.getElementById('reparacion_maquina_id').value;
 
-    // Cambiamos el const por let para poder modificar la fecha si está vacía
     let fechaIngresada = document.getElementById('fecha_entrada').value;
     let estadoSeleccionado = document.getElementById('estado').value;
 
     if (!document.getElementById('cliente_id').value) return alert('Selecciona un cliente para el aviso.');
 
-    // 🛡️ Novedad: Si la fecha está vacía, le asignamos automáticamente la de hoy
+    // Automatismo de fechas. Si deciden crear un parte sobre la marcha sin seleccionar el dia, asumo que es para hoy y autogenero la fecha.
     if (!fechaIngresada) {
         fechaIngresada = new Date().toISOString().split('T')[0];
     }
 
-    // 🛡️ Reglas de estado automáticas
+    // Automatismo de estados. Si lo guardo en blanco va para libre. Si meto un tecnico y estaba pendiente, arranco el motor pasandolo a "en proceso".
     if (tecnicoSeleccionado === "") {
-        estadoSeleccionado = 'pendiente'; // Si no hay técnico, por fuerza es pendiente
+        estadoSeleccionado = 'pendiente';
     } else {
-        // Si le has asignado técnico y estaba en pendiente, pasa a en proceso
         if (estadoSeleccionado === 'pendiente') {
             estadoSeleccionado = 'en proceso';
         }
@@ -516,6 +566,7 @@ export async function guardarReparacion() {
 
         if (res.ok) {
             limpiarFormulario();
+            // Truco visual por si el tecnico estaba trasteando en un formulario donde no debia.
             if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
                 document.getElementById('caja-formulario-reparacion').classList.add('hidden');
                 document.getElementById('caja-tabla-reparaciones').classList.remove('lg:col-span-2');
@@ -523,6 +574,7 @@ export async function guardarReparacion() {
             }
             await cargarReparaciones(true);
         } else {
+            // Me he dejado un chivato de errores de servidor en consola por si la base de datos devuelve errores 500.
             const errorHtml = await res.text();
             console.error("🔥 ERROR DEL SERVIDOR (LARAVEL):", errorHtml);
             alert("El servidor ha rechazado los datos. Revisa la consola (F12) para ver el motivo exacto.");
@@ -532,6 +584,8 @@ export async function guardarReparacion() {
 
 export function editarReparacion(repCodificada) {
     const rep = JSON.parse(decodeURIComponent(repCodificada));
+
+    // Si la caja del formulario esta escondida, la expando para que se vea antes de rellenar.
     if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
         const cajaForm = document.getElementById('caja-formulario-reparacion');
         const cajaTabla = document.getElementById('caja-tabla-reparaciones');
@@ -541,19 +595,26 @@ export function editarReparacion(repCodificada) {
             cajaTabla.classList.add('lg:col-span-2');
         }
     }
+
+    // Asigno los valores al DOM.
     document.getElementById('form-title').innerText = 'Editar Reparación #' + rep.id;
     document.getElementById('rep-id').value = rep.id;
+
     if (rep.cliente_id && rep.cliente) {
         seleccionarClienteReparacion(rep.cliente);
+
+        // Uso un retardo milimetrico para asegurarme de que las maquinas de ese cliente han cargado en el desplegable antes de seleccionar la que toca.
         setTimeout(() => {
             const selectMaq = document.getElementById('reparacion_maquina_id');
             if(selectMaq) selectMaq.value = rep.maquina_id || '';
         }, 10);
     }
+
     document.getElementById('tecnico_id').value = rep.tecnico_id || '';
     document.getElementById('descripcion').value = rep.descripcion || '';
     document.getElementById('estado').value = rep.estado;
     if(rep.fecha_entrada) document.getElementById('fecha_entrada').value = rep.fecha_entrada;
+
     document.getElementById('form-title').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -566,6 +627,7 @@ export async function borrarReparacion(id) {
         });
 
         if (res.ok) {
+            // Si el aviso que acabo de borrar resulta que es el que estaba editando en ese momento en el panel izquierdo, reseteo el panel para evitar corrupcion de datos.
             if (document.getElementById('rep-id').value == id) {
                 limpiarFormulario();
             }
@@ -575,13 +637,17 @@ export async function borrarReparacion(id) {
 }
 
 export function limpiarFormulario() {
+    // Vuelvo todos los inputs a su configuracion estandar de inicio.
     document.getElementById('form-title').innerText = 'Nueva Reparación';
     document.getElementById('rep-id').value = '';
     document.getElementById('cliente_id').value = '';
     document.getElementById('cliente_search').value = '';
     document.getElementById('cliente_info').classList.add('hidden');
     document.getElementById('mapa_container').classList.add('hidden');
+
     if (!AppState.usuarioActual || AppState.usuarioActual.rol !== 'tecnico') document.getElementById('tecnico_id').value = '';
+
+    // Reseteo el desplegable de las maquinas tambien para no mezclar equipos de empresas distintas.
     const selectMaquina = document.getElementById('reparacion_maquina_id');
     if(selectMaquina) {
         selectMaquina.innerHTML = '<option value="">Selecciona primero un cliente...</option>';
@@ -593,10 +659,13 @@ export function limpiarFormulario() {
 }
 
 export function verDetalleReparacion(jsonRep) {
+    // Desempaqueto el ticket en mi alert nativo de javascript como en versiones anteriores. Me aseguro de formatear bien la informacion de la maquina si es que tiene una conectada.
     const rep = JSON.parse(decodeURIComponent(jsonRep));
     const arrayPiezas = typeof rep.piezas_utilizadas === 'string' ? JSON.parse(rep.piezas_utilizadas) : (rep.piezas_utilizadas || []);
+
     let htmlPiezas = arrayPiezas.map(p => `- ${p.cantidad}x ${p.descripcion} (Ref: ${p.referencia || 'N/A'})`).join('\n') || 'Ninguna pieza utilizada.';
     let stringMaquina = rep.maquina ? `🖨️ Máquina: ${rep.maquina.modelo} (S/N: ${rep.maquina.numero_serie})\n` : '';
+
     alert(`🛠️ REPARACIÓN #${rep.id} - ${rep.estado.toUpperCase()}
 -------------------------------------------------
 🧑‍🔧 Técnico: ${rep.tecnico?.nombre || 'Sin asignar'}
@@ -616,17 +685,34 @@ ${htmlPiezas}`);
 }
 
 export function buscarPiezaModal() {
+    // Este buscador vive dentro del modal de cierre. Filtra sobre el inventario local segun lo que voy escribiendo en la casilla de referencia.
     const query = document.getElementById('add_pieza_ref').value.toLowerCase();
     const dropdown = document.getElementById('dropdown_piezas_modal');
     dropdown.innerHTML = '';
+
+    // Si me arrepiento y borro, oculto el panel de resultados predictivos y me aseguro de que el input de descripcion vuelva a ser editable.
     if (query.length < 1) { dropdown.classList.add('hidden'); document.getElementById('add_pieza_desc').readOnly = false; return; }
+
     const filtradas = AppState.listaPiezas.filter(p => p.referencia.toLowerCase().includes(query) || p.descripcion.toLowerCase().includes(query));
-    if (filtradas.length === 0) { dropdown.innerHTML = '<li class="p-2 text-gray-500 text-xs italic">No coincidencias.</li>'; document.getElementById('add_pieza_desc').readOnly = false; } else {
+
+    if (filtradas.length === 0) {
+        dropdown.innerHTML = '<li class="p-2 text-gray-500 text-xs italic">No coincidencias.</li>';
+        document.getElementById('add_pieza_desc').readOnly = false;
+    } else {
         filtradas.forEach(p => {
             const li = document.createElement('li');
             li.className = 'p-2 hover:bg-blue-50 cursor-pointer border-b text-gray-800 flex justify-between items-center';
+
+            // Visualmente separo quien tiene stock en verde y quien no en rojo.
             li.innerHTML = `<div><span class="font-bold text-xs">${p.referencia}</span> - <span class="text-xs text-gray-600">${p.descripcion}</span></div><div class="text-[10px] font-bold ${p.stock > 0 ? 'text-green-600' : 'text-red-500'}">Stock: ${p.stock}</div>`;
-            li.onclick = () => { document.getElementById('add_pieza_ref').value = p.referencia; document.getElementById('add_pieza_desc').value = p.descripcion; document.getElementById('add_pieza_desc').readOnly = true; dropdown.classList.add('hidden'); };
+
+            li.onclick = () => {
+                document.getElementById('add_pieza_ref').value = p.referencia;
+                document.getElementById('add_pieza_desc').value = p.descripcion;
+                // Bloqueo el cuadro descripcion para evitar estropear la semantica de la pieza en base de datos.
+                document.getElementById('add_pieza_desc').readOnly = true;
+                dropdown.classList.add('hidden');
+            };
             dropdown.appendChild(li);
         });
     }
@@ -634,6 +720,7 @@ export function buscarPiezaModal() {
 }
 
 export function generarPDFReparacion(repCodificada) {
+    // Creo el informe final. Decodifico el objeto y me quedo con sus componentes.
     const rep = JSON.parse(decodeURIComponent(repCodificada));
     const piezas = typeof rep.piezas_utilizadas === 'string' ? JSON.parse(rep.piezas_utilizadas) : (rep.piezas_utilizadas || []);
 
@@ -650,6 +737,7 @@ export function generarPDFReparacion(repCodificada) {
     const maquinaNombre = rep.maquina ? rep.maquina.modelo + ' (S/N: ' + rep.maquina.numero_serie + ')' : 'Aviso General';
     const fechaCierreVal = rep.fecha_cierre || rep.fecha_entrada;
 
+    // Uso mi trampa de PDF web. Abro una ventana nueva e inyecto a traves del document.write todo mi marcado HTML crudo con mis tablas y la imagen de mi empresa insertada.
     const ventimp = window.open(' ', '_blank');
     ventimp.document.write('<html><head><title>Parte #' + rep.id + '</title>');
     ventimp.document.write('<style>body{font-family:sans-serif;padding:40px;color:#333;}.header{display:flex;justify-content:space-between;border-bottom:2px solid #2563eb;padding-bottom:10px;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;}.caja{border:1px solid #e5e7eb;padding:10px;border-radius:5px;}h3{border-left:4px solid #2563eb;padding-left:10px;color:#1e3a8a;}table{width:100%;border-collapse:collapse;}th{background:#f9fafb;text-align:left;padding:8px;border-bottom:1px solid #ddd;}td{padding:8px;border-bottom:1px solid #eee;}.footer{margin-top:50px;display:flex;justify-content:space-between;}.firma{width:200px;border-top:1px solid #333;text-align:center;padding-top:10px;}</style></head><body>');
@@ -668,6 +756,7 @@ export function generarPDFReparacion(repCodificada) {
 
     ventimp.document.write('<div class="footer"><div class="firma">Firma Técnico</div><div class="firma">Firma Cliente</div></div>');
 
+    // Le doy un pequeño retraso a la impresion automatica en el script incrustado, si no, el navegador intenta imprimir antes de que las imagenes tengan tiempo de renderizar. Despues se auto cierra.
     ventimp.document.write('<script>setTimeout(function(){ window.print(); window.close(); }, 800);</script></body></html>');
     ventimp.document.close();
 }
