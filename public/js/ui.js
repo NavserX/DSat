@@ -111,6 +111,9 @@ export function mostrarMapaDeTabla(dir) {
 
     // Hago visible el bloque del mapa.
     if (map) map.classList.remove('hidden');
+
+    // Le ordeno al navegador que deslice la pantalla suavemente hacia abajo hasta dejar el mapa en la parte superior de la vista.
+    map.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // Añado un vigilante a toda la pantalla. Si detecto un clic, compruebo si ha sido fuera de mis listas desplegables.
