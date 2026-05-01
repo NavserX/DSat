@@ -226,7 +226,12 @@ export function agregarPiezaLista() {
     const cant = document.getElementById('add_pieza_cant').value;
     if(!desc) return alert("La descripción de la pieza es obligatoria");
 
-    AppState.piezasTemporales.push({ referencia: ref, descripcion: desc, cantidad: cant });
+    // Busco en mi almacén global la pieza que acabo de añadir para copiarle su precio. Si es una pieza manual que no esta en la base de datos, le pongo 0 euros.
+    const piezaInventario = AppState.listaPiezas.find(p => p.referencia === ref);
+    const precio = piezaInventario ? parseFloat(piezaInventario.precio || 0) : 0;
+
+    // Ahora guardo la pieza incluyendo su precio unitario en mi memoria temporal.
+    AppState.piezasTemporales.push({ referencia: ref, descripcion: desc, cantidad: cant, precio: precio });
 
     document.getElementById('add_pieza_ref').value = '';
     document.getElementById('add_pieza_desc').value = '';
@@ -350,6 +355,7 @@ export async function cargarReparaciones(forzar = false) {
         }
 
         let pendientes = 0, proceso = 0, terminado = 0;
+        let contadorLibres = 0; // Creo un contador exclusivo para la franja amarilla
         const tbodyLibres = document.getElementById('tabla-avisos-libres');
         if(tbodyLibres) tbodyLibres.innerHTML = '';
 
@@ -358,6 +364,9 @@ export async function cargarReparaciones(forzar = false) {
 
             // Lleno primero la bandeja general de avisos huerfanos.
             if (rep.estado === 'pendiente' && !rep.tecnico_id && tbodyLibres) {
+
+                contadorLibres++; // Sumo 1 cada vez que encuentro un aviso suelto
+
                 tbodyLibres.innerHTML += `
                 <tr class="hover:bg-yellow-50 transition border-b">
                     <td class="p-4"><span class="font-bold text-blue-600">#${rep.id}</span><br><span class="text-xs text-gray-500">📅 ${fechaFormateada}</span></td>
@@ -381,6 +390,18 @@ export async function cargarReparaciones(forzar = false) {
                 if (rep.estado === 'terminado') terminado++;
             }
         });
+
+        // Con esta lógica controlo el encendido y apagado de la franja amarilla para la notificación de avisos pendientes
+        const btnMenuLibres = document.getElementById('btn-menu-libres');
+        if (btnMenuLibres) {
+            if (contadorLibres > 0) {
+                // Si hay 1 o más, le inyecto las clases de la raya amarilla
+                btnMenuLibres.classList.add('border-l-4', 'border-yellow-500');
+            } else {
+                // Si está a cero, se las arranco para que quede oculto
+                btnMenuLibres.classList.remove('border-l-4', 'border-yellow-500');
+            }
+        }
 
         document.getElementById('stat-pendientes').innerText = pendientes;
         document.getElementById('stat-proceso').innerText = proceso;
@@ -583,9 +604,10 @@ export async function guardarReparacion() {
 }
 
 export function editarReparacion(repCodificada) {
+    // Desempaqueto los datos de la reparación que pasé a formato de texto seguro en la tabla.
     const rep = JSON.parse(decodeURIComponent(repCodificada));
 
-    // Si la caja del formulario esta escondida, la expando para que se vea antes de rellenar.
+    // Como normalmente a los técnicos les oculto el panel izquierdo para dejarles la pantalla limpia, si deciden editar un aviso tengo que volver a hacer visible el formulario y reajustar los anchos de la tabla para que quepan las dos columnas.
     if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
         const cajaForm = document.getElementById('caja-formulario-reparacion');
         const cajaTabla = document.getElementById('caja-tabla-reparaciones');
@@ -596,25 +618,53 @@ export function editarReparacion(repCodificada) {
         }
     }
 
-    // Asigno los valores al DOM.
+    // Cambio el título para saber de un vistazo en qué número de ticket estoy trabajando.
     document.getElementById('form-title').innerText = 'Editar Reparación #' + rep.id;
+
+    // Este paso es crítico. Guardo el ID de la reparación en un campo oculto. Cuando luego le dé al botón de guardar, mi código comprobará este campo; como tiene un valor, sabrá que tiene que hacer un UPDATE en la base de datos en lugar de crear un aviso nuevo.
     document.getElementById('rep-id').value = rep.id;
 
     if (rep.cliente_id && rep.cliente) {
+        // Escribo manualmente el nombre del cliente en la caja de búsqueda visible para que no se quede en blanco, corrigiendo el problema de interfaz que tenía antes.
+        document.getElementById('cliente_search').value = rep.cliente.nombre;
+
+        // Disparo la función estándar que carga su bloque azul de información (teléfono, mapa) y busca sus máquinas.
         seleccionarClienteReparacion(rep.cliente);
 
-        // Uso un retardo milimetrico para asegurarme de que las maquinas de ese cliente han cargado en el desplegable antes de seleccionar la que toca.
+        // Le doy al navegador una pausa milimétrica de 10 milisegundos. Como la función de arriba tiene que rellenar el selector de máquinas, le doy tiempo a que termine antes de forzar la selección de la máquina exacta de esta avería.
         setTimeout(() => {
             const selectMaq = document.getElementById('reparacion_maquina_id');
             if(selectMaq) selectMaq.value = rep.maquina_id || '';
         }, 10);
     }
 
+    // Vuelco los datos básicos en sus casillas correspondientes.
     document.getElementById('tecnico_id').value = rep.tecnico_id || '';
     document.getElementById('descripcion').value = rep.descripcion || '';
-    document.getElementById('estado').value = rep.estado;
+
+    // Lógica dinámica de seguridad para el estado "Terminado".
+    // Como borré la opción del HTML para que nadie creara avisos terminados de cero, tengo que comprobar si el desplegable la tiene ahora mismo.
+    const selectEstado = document.getElementById('estado');
+    let existeTerminado = false;
+    for (let i = 0; i < selectEstado.options.length; i++) {
+        if (selectEstado.options[i].value === 'terminado') existeTerminado = true;
+    }
+
+    // Si resulta que estoy editando un aviso que ya estaba facturado y cerrado, y la opción no existe en el desplegable, la fabrico al vuelo mediante Javascript y la inyecto en la lista.
+    if (rep.estado === 'terminado' && !existeTerminado) {
+        const opt = document.createElement('option');
+        opt.value = 'terminado';
+        opt.text = 'Terminado';
+        selectEstado.appendChild(opt);
+    }
+
+    // Gracias al paso anterior, ahora puedo asignarle el estado original al desplegable con total tranquilidad, sin miedo a que el navegador no encuentre la opción y me devuelva el aviso a "pendiente" por error.
+    selectEstado.value = rep.estado;
+
+    // Restauro la fecha de entrada original.
     if(rep.fecha_entrada) document.getElementById('fecha_entrada').value = rep.fecha_entrada;
 
+    // Hago que la página haga un scroll suave hacia la parte superior del formulario. Es muy útil si le he dado a editar a un aviso que estaba muy abajo en la tabla, para no tener que subir con la rueda del ratón a mano.
     document.getElementById('form-title').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -654,16 +704,73 @@ export function limpiarFormulario() {
         selectMaquina.classList.remove('bg-green-50', 'border-green-400');
     }
     document.getElementById('descripcion').value = '';
-    document.getElementById('estado').value = 'pendiente';
+    // Limpieza de estado, si inyecte la opcion "Terminado" antes para editar un aviso viejo, ahora que estoy limpiando la pantalla la destruyo para que el proximo aviso nuevo no la tenga.
+    const selectEstado = document.getElementById('estado');
+    for (let i = 0; i < selectEstado.options.length; i++) {
+        if (selectEstado.options[i].value === 'terminado') {
+            selectEstado.remove(i);
+        }
+    }
+
+    // Y lo devuelvo a pendiente por defecto.
+    selectEstado.value = 'pendiente';
     setFechaHoy();
 }
 
 export function verDetalleReparacion(jsonRep) {
-    // Desempaqueto el ticket en mi alert nativo de javascript como en versiones anteriores. Me aseguro de formatear bien la informacion de la maquina si es que tiene una conectada.
+    // Desempaqueto el ticket.
     const rep = JSON.parse(decodeURIComponent(jsonRep));
     const arrayPiezas = typeof rep.piezas_utilizadas === 'string' ? JSON.parse(rep.piezas_utilizadas) : (rep.piezas_utilizadas || []);
 
-    let htmlPiezas = arrayPiezas.map(p => `- ${p.cantidad}x ${p.descripcion} (Ref: ${p.referencia || 'N/A'})`).join('\n') || 'Ninguna pieza utilizada.';
+    // Preparo los contadores de dinero.
+    let costeManoObra = 0;
+    let costePiezas = 0;
+
+    // Calculo la mano de obra solo si el aviso tiene horas registradas.
+    if (rep.hora_inicio && rep.hora_fin) {
+        // Limpio la hora de la base de datos para quitarle los segundos (ej: de "20:00:00" a "20:00")
+        const horaInicioLimpia = rep.hora_inicio.substring(0, 5);
+        const horaFinLimpia = rep.hora_fin.substring(0, 5);
+
+        // Uso fechas ficticias para que javascript sepa restar las horas correctamente.
+        const inicio = new Date(`2026-01-01T${horaInicioLimpia}:00`);
+        const fin = new Date(`2026-01-01T${horaFinLimpia}:00`);
+
+        // Saco los minutos totales que ha estado el tecnico.
+        let diffMins = Math.round((fin - inicio) / 60000);
+
+        // Si el aviso cruza la medianoche (la resta da negativo), le sumo 24 horas en minutos.
+        if (diffMins < 0) {
+            diffMins += 24 * 60;
+        }
+
+        if (diffMins > 0) {
+            // Regla de negocio: la primera hora (o fraccion) siempre son 70€.
+            costeManoObra = 70;
+
+            // Si se pasa de 60 minutos, le cobramos los bloques extra.
+            if (diffMins > 60) {
+                const minutosExtra = diffMins - 60;
+                // Uso Math.ceil para redondear siempre hacia arriba. Si esta 1 minuto extra, le cobra el bloque entero de 30 mins.
+                costeManoObra += Math.ceil(minutosExtra / 30) * 35;
+            }
+        }
+    }
+
+    // Calculo el coste de las piezas iterando sobre el carrito.
+    let htmlPiezas = '';
+    if (arrayPiezas.length > 0) {
+        htmlPiezas = arrayPiezas.map(p => {
+            const precioUnitario = parseFloat(p.precio) || 0;
+            const subtotalPieza = precioUnitario * parseInt(p.cantidad);
+            costePiezas += subtotalPieza;
+            return `- ${p.cantidad}x ${p.descripcion} (Ref: ${p.referencia || 'N/A'}) = ${subtotalPieza.toFixed(2)}€`;
+        }).join('\n');
+    } else {
+        htmlPiezas = 'Ninguna pieza utilizada.';
+    }
+
+    const totalFactura = costeManoObra + costePiezas;
     let stringMaquina = rep.maquina ? `🖨️ Máquina: ${rep.maquina.modelo} (S/N: ${rep.maquina.numero_serie})\n` : '';
 
     alert(`🛠️ REPARACIÓN #${rep.id} - ${rep.estado.toUpperCase()}
@@ -681,7 +788,14 @@ ${rep.descripcion || 'Sin descripción'}
 ${rep.resolucion_texto || 'Pendiente de resolución'}
 
 🔧 PIEZAS:
-${htmlPiezas}`);
+${htmlPiezas}
+
+💶 Desglose de Costes:
+   - Mano de obra: ${costeManoObra.toFixed(2)}€
+   - Piezas: ${costePiezas.toFixed(2)}€
+-------------------------------------------------
+💰 TOTAL ESTIMADO: ${totalFactura.toFixed(2)}€
+    `);
 }
 
 export function buscarPiezaModal() {
@@ -727,20 +841,53 @@ export function generarPDFReparacion(repCodificada) {
     const dominio = window.location.origin;
     const logoUrl = dominio + '/img/logo-web-ofimatica-digital.webp';
 
-    let piezasHTML = '';
-    if (piezas.length > 0) {
-        piezasHTML = piezas.map(p => `<tr><td>${p.referencia || 'N/A'}</td><td>${p.descripcion}</td><td style="text-align:center">${p.cantidad}</td></tr>`).join('');
-    } else {
-        piezasHTML = '<tr><td colspan="3" style="text-align:center; color: #999;">No se utilizaron piezas de repuesto</td></tr>';
+    // Contadores de dinero para el PDF
+    let costeManoObra = 0;
+    let costePiezas = 0;
+
+    // Calculo de mano de obra
+    if (rep.hora_inicio && rep.hora_fin) {
+        const horaInicioLimpia = rep.hora_inicio.substring(0, 5);
+        const horaFinLimpia = rep.hora_fin.substring(0, 5);
+
+        const inicio = new Date(`2026-01-01T${horaInicioLimpia}:00`);
+        const fin = new Date(`2026-01-01T${horaFinLimpia}:00`);
+        let diffMins = Math.round((fin - inicio) / 60000);
+
+        if (diffMins < 0) {
+            diffMins += 24 * 60;
+        }
+
+        if (diffMins > 0) {
+            costeManoObra = 70;
+            if (diffMins > 60) {
+                costeManoObra += Math.ceil((diffMins - 60) / 30) * 35;
+            }
+        }
     }
 
+    // Calculo y pintado de piezas
+    let piezasHTML = '';
+    if (piezas.length > 0) {
+        piezasHTML = piezas.map(p => {
+            const precioUnitario = parseFloat(p.precio) || 0;
+            const subtotalPieza = precioUnitario * parseInt(p.cantidad);
+            costePiezas += subtotalPieza;
+            return `<tr><td>${p.referencia || 'N/A'}</td><td>${p.descripcion}</td><td style="text-align:center">${p.cantidad}</td><td style="text-align:right">${precioUnitario.toFixed(2)} €</td><td style="text-align:right">${subtotalPieza.toFixed(2)} €</td></tr>`;
+        }).join('');
+    } else {
+        piezasHTML = '<tr><td colspan="5" style="text-align:center; color: #999;">No se utilizaron piezas de repuesto</td></tr>';
+    }
+
+    const totalFactura = costeManoObra + costePiezas;
     const maquinaNombre = rep.maquina ? rep.maquina.modelo + ' (S/N: ' + rep.maquina.numero_serie + ')' : 'Aviso General';
     const fechaCierreVal = rep.fecha_cierre || rep.fecha_entrada;
 
-    // Uso mi trampa de PDF web. Abro una ventana nueva e inyecto a traves del document.write todo mi marcado HTML crudo con mis tablas y la imagen de mi empresa insertada.
+    // Inyecto todo el diseño del PDF web en una nueva pestaña.
     const ventimp = window.open(' ', '_blank');
     ventimp.document.write('<html><head><title>Parte #' + rep.id + '</title>');
-    ventimp.document.write('<style>body{font-family:sans-serif;padding:40px;color:#333;}.header{display:flex;justify-content:space-between;border-bottom:2px solid #2563eb;padding-bottom:10px;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;}.caja{border:1px solid #e5e7eb;padding:10px;border-radius:5px;}h3{border-left:4px solid #2563eb;padding-left:10px;color:#1e3a8a;}table{width:100%;border-collapse:collapse;}th{background:#f9fafb;text-align:left;padding:8px;border-bottom:1px solid #ddd;}td{padding:8px;border-bottom:1px solid #eee;}.footer{margin-top:50px;display:flex;justify-content:space-between;}.firma{width:200px;border-top:1px solid #333;text-align:center;padding-top:10px;}</style></head><body>');
+
+    ventimp.document.write('<style>body{font-family:sans-serif;padding:40px;color:#333;}.header{display:flex;justify-content:space-between;border-bottom:2px solid #2563eb;padding-bottom:10px;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;}.caja{border:1px solid #e5e7eb;padding:10px;border-radius:5px;}h3{border-left:4px solid #2563eb;padding-left:10px;color:#1e3a8a;}table{width:100%;border-collapse:collapse;margin-bottom:20px;}th{background:#f9fafb;text-align:left;padding:8px;border-bottom:1px solid #ddd;}td{padding:8px;border-bottom:1px solid #eee;}.totales{float:right; width:300px; border:2px solid #1e3a8a; padding:15px; border-radius:5px; background:#f8fafc;}.totales-linea{display:flex; justify-content:space-between; margin-bottom:5px;}.totales-gran{font-size:1.2em; font-weight:bold; border-top:1px solid #ccc; padding-top:10px; margin-top:10px;}.clear{clear:both;}.footer{margin-top:80px;display:flex;justify-content:space-between;}.firma{width:200px;border-top:1px solid #333;text-align:center;padding-top:10px;}</style></head><body>');
 
     ventimp.document.write('<div class="header"><div><img src="' + logoUrl + '" style="max-width: 350px; height: auto;" alt="Digital Soluciones"></div><div style="text-align:right"><h3>PARTE DE TRABAJO</h3><p>Aviso: #' + rep.id + '</p></div></div>');
 
@@ -750,13 +897,14 @@ export function generarPDFReparacion(repCodificada) {
     ventimp.document.write('<p><strong>Máquina:</strong> ' + maquinaNombre + '</p>');
     ventimp.document.write('<h3>Descripción Avería</h3><p>' + (rep.descripcion || 'Sin datos') + '</p>');
     ventimp.document.write('<h3>Trabajo Realizado</h3><p>' + (rep.resolucion_texto || 'Pendiente') + '</p>');
-    ventimp.document.write('<p><strong>Tiempo total:</strong> ' + (rep.tiempo_total || '-') + '</p>');
+    ventimp.document.write('<p><strong>Horario:</strong> ' + (rep.hora_inicio || '--:--') + ' a ' + (rep.hora_fin || '--:--') + ' (' + (rep.tiempo_total || '-') + ')</p>');
 
-    ventimp.document.write('<h3>Piezas Utilizadas</h3><table><thead><tr><th>Ref</th><th>Descripción</th><th>Cant</th></tr></thead><tbody>' + piezasHTML + '</tbody></table>');
+    ventimp.document.write('<h3>Piezas Utilizadas</h3><table><thead><tr><th>Ref</th><th>Descripción</th><th style="text-align:center">Cant</th><th style="text-align:right">Precio Ud.</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>' + piezasHTML + '</tbody></table>');
+
+    ventimp.document.write('<div class="totales"><div class="totales-linea"><span>Mano de obra:</span><span>' + costeManoObra.toFixed(2) + ' €</span></div><div class="totales-linea"><span>Total Piezas:</span><span>' + costePiezas.toFixed(2) + ' €</span></div><div class="totales-linea totales-gran"><span>TOTAL ESTIMADO:</span><span>' + totalFactura.toFixed(2) + ' €</span></div></div><div class="clear"></div>');
 
     ventimp.document.write('<div class="footer"><div class="firma">Firma Técnico</div><div class="firma">Firma Cliente</div></div>');
 
-    // Le doy un pequeño retraso a la impresion automatica en el script incrustado, si no, el navegador intenta imprimir antes de que las imagenes tengan tiempo de renderizar. Despues se auto cierra.
     ventimp.document.write('<script>setTimeout(function(){ window.print(); window.close(); }, 800);</script></body></html>');
     ventimp.document.close();
 }

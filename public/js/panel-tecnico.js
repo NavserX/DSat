@@ -1,5 +1,5 @@
 // ==========================================================================
-// PANEL DE GESTION - LOGICA FRONTEND (JavaScript)
+// PANEL DE GESTION - LOGICA FRONTEND (Versión inicial, ya obsoleta)
 // ==========================================================================
 // Este archivo es el cerebro de la pagina. Me encargo de comunicarme con Laravel (mi servidor),
 // pedirle datos y actualizar lo que veo en pantalla sin necesidad de estar recargando la pagina web todo el tiempo.

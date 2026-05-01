@@ -49,7 +49,7 @@ export function adaptarInterfazAlRol() {
 export function mostrarPantalla(idPantalla, botonClicado) {
     // Con esta función controlo el cambio de pantallas sin recargar la web (Single Page Application).
 
-    // 1. Primero agarro absolutamente todas las pantallas de la aplicación y las escondo.
+    // 1. Primero cojo absolutamente todas las pantallas de la aplicación y las escondo.
     // Además, las preparo para la animación haciéndolas transparentes y bajándolas un poco hacia abajo.
     document.querySelectorAll('.pantalla-seccion').forEach(div => {
         if(div) {
@@ -80,7 +80,7 @@ export function mostrarPantalla(idPantalla, botonClicado) {
 
     // 3. Me encargo del diseño del menú lateral. Agarro todos los botones y les quito el fondo azul brillante y la rayita lateral.
     document.querySelectorAll('.menu-btn').forEach(btn => {
-        btn.classList.remove('bg-blue-600', 'border-l-4');
+        btn.classList.remove('bg-blue-600');
         btn.classList.add('hover:bg-slate-800');
     });
 

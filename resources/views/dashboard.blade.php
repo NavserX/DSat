@@ -36,7 +36,7 @@
         <!-- Uso mi funcion de javascript mostrarPantalla() pasandole el ID del bloque HTML que quiero activar. Al pulsar, ocultara todos los demas bloques. -->
         <nav class="flex gap-2 lg:flex-col lg:space-y-2 flex-1 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
             <button id="btn-menu-reparaciones" onclick="mostrarPantalla('pantalla_reparaciones', this)" class="menu-btn w-full text-left px-4 py-2 rounded bg-blue-600 whitespace-nowrap transition">🛠️ Reparaciones</button>
-            <button id="btn-menu-libres" onclick="mostrarPantalla('pantalla_libres', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition border-l-4 border-yellow-500">📥 Avisos Libres</button>
+            <button id="btn-menu-libres" onclick="mostrarPantalla('pantalla_libres', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">📥 Avisos Libres</button>
             <button id="btn-menu-clientes" onclick="mostrarPantalla('pantalla_clientes', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">📋 Historial Clientes</button>
             <button id="btn-menu-tecnicos" onclick="mostrarPantalla('pantalla_tecnicos', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">👷 Historial Técnicos</button>
             <button id="btn-menu-gestion-clientes" onclick="mostrarPantalla('pantalla_gestion_clientes', this)" class="menu-btn w-full text-left px-4 py-2 rounded hover:bg-slate-800 whitespace-nowrap transition">👥 Gestión Clientes</button>
@@ -125,7 +125,6 @@
                     <select id="estado" class="w-full p-2 border border-gray-300 rounded mt-1 focus:ring-2 focus:ring-blue-400 bg-gray-50 text-gray-800">
                         <option value="pendiente">Pendiente</option>
                         <option value="en proceso">En proceso</option>
-                        <option value="terminado">Terminado</option>
                     </select>
 
                     <div class="flex flex-col sm:flex-row gap-2 mt-6">
@@ -256,7 +255,7 @@
                     </select>
                 </div>
                 <div class="w-full md:w-1/3">
-                    <label class="block text-sm font-semibold mb-2">Desde :</label>
+                    <label class="block text-sm font-semibold mb-2">Desde:</label>
                     <input type="date" id="filtro_fecha_inicio" onchange="filtrarHistorialTecnicos()" class="w-full p-2.5 border rounded bg-gray-50">
                 </div>
                 <div class="w-full md:w-1/3">
@@ -265,8 +264,8 @@
                 </div>
             </div>
 
-            <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl">
-                <h2 class="text-xl font-semibold mb-4 border-b pb-2 text-blue-600" id="titulo_historial_cliente">Reparaciones de Técnicos</h2>
+            <div id="contenedor_historial_tecnico" class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl">
+                <h2 class="text-xl font-semibold mb-4 border-b pb-2 text-blue-600" id="titulo_historial_tecnico">Reparaciones de Técnicos</h2>
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
                         <thead>
