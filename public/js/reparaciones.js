@@ -384,10 +384,10 @@ export async function cargarReparaciones(forzar = false) {
                 ? (rep.tecnico_id == AppState.usuarioActual.id)
                 : true;
 
-            // Identifico si es un aviso de la bolsa de libres
+            // Identifico si es un aviso que esté libre
             const esLibre = (rep.estado === 'pendiente' && !rep.tecnico_id);
 
-            // Si el aviso es mío O si está libre en la bolsa, lo sumo al contador de Pendientes para que el técnico vea el número total.
+            // Si el aviso es mío o si está libre , lo sumo al contador de Pendientes para que el técnico vea el número total.
             if (esMio || esLibre) {
                 if (rep.estado === 'pendiente') pendientes++;
             }
@@ -537,7 +537,7 @@ export function renderizarTablaReparaciones() {
                 <td class="pt-4 pb-2 px-4 min-w-[200px] align-top">
                     <div class="font-medium text-gray-900">${rep.cliente?.nombre || 'S/N'}</div>
                     ${infoMaquina}
-                    <div class="text-xs mt-1 font-bold ${rep.tecnico_id ? 'text-purple-600' : 'text-yellow-600'}">👷 ${rep.tecnico?.nombre || 'Libre en Bolsa'}</div>
+                    <div class="text-xs mt-1 font-bold ${rep.tecnico_id ? 'text-purple-600' : 'text-yellow-600'}">👷 ${rep.tecnico?.nombre || 'Sin Asignar'}</div>
                 </td>
                 <td class="pt-4 pb-2 px-4 whitespace-nowrap align-top">${obtenerBadgeEstado(rep.estado)}</td>
                 <td class="pt-4 pb-2 px-4 text-center whitespace-nowrap align-top">${btnEstadoRapido}${btnLlamar}${btnMapa}${btnImprimir}${btnEditar}${btnBorrar}</td>
