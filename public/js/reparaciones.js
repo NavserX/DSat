@@ -436,15 +436,13 @@ export async function cargarReparaciones(forzar = false) {
 // --- DIBUJAR TABLA (PAGINADA Y FILTRADA) ---
 
 export function renderizarTablaReparaciones() {
-    // Localizo el cuerpo de la tabla principal en el HTML. Si por lo que sea no existe en la pantalla actual, corto la ejecucion aqui mismo para que no de errores.
+    // Localizo el cuerpo de la tabla principal en el HTML. Si no existe, corto la ejecución.
     const tbodyPrincipal = document.getElementById('tabla-reparaciones');
     if(!tbodyPrincipal) return;
 
-    // Vacio la tabla por completo para tener un lienzo en blanco antes de empezar a inyectar los datos nuevos.
     tbodyPrincipal.innerHTML = '';
 
-    // Recorro los tres botones gigantes de la parte superior (Pendientes, En proceso, Terminadas).
-    // Compruebo cual es el filtro que tengo activo actualmente y le aplico clases para que brille y tenga un borde visible, mientras que a los otros dos los oscurezco. Asi el usuario sabe en que pestaña esta.
+    // Gestiono el brillo y opacidad de las 3 tarjetas superiores para saber en qué pestaña estoy.
     ['pendiente', 'en proceso', 'terminado'].forEach(estado => {
         const id = `tarjeta-${estado.replace(' ', '-')}`;
         const tarjeta = document.getElementById(id);
@@ -459,85 +457,77 @@ export function renderizarTablaReparaciones() {
         }
     });
 
-    // Cojo mi cajon global donde tengo descargadas todas las reparaciones de la base de datos.
     let filtradas = AppState.todasLasReparaciones;
 
-    // CORRECCIÓN PARA TECNICOS: Si detecto que el usuario logueado es un tecnico, le meto un tijeretazo a la lista.
-    // Solo le dejo ver los avisos que tengan su ID (los suyos) o los avisos que esten en estado 'pendiente' y no tengan tecnico asignado (los de la bolsa de libres para que pueda cogerlos).
+    // Filtro para técnicos: Ven sus propios avisos Y los avisos huérfanos pendientes.
     if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
         filtradas = filtradas.filter(rep => rep.tecnico_id == AppState.usuarioActual.id || (!rep.tecnico_id && rep.estado === 'pendiente'));
     }
 
-    // Si he pulsado en una de las tarjetas de arriba (por ejemplo, "terminado"), descarto todos los avisos que no coincidan con ese estado.
     if (filtroEstadoReparaciones !== 'todos') {
         filtradas = filtradas.filter(rep => rep.estado === filtroEstadoReparaciones);
     }
 
-    // Logica matematica para la paginacion.
-    // Cuento cuantos avisos me han quedado tras los filtros, y lo divido entre los avisos que quiero mostrar por pagina (itemsPorPaginaReparaciones). Lo redondeo siempre hacia arriba para saber el total de paginas.
+    // Lógica matemática para la paginación.
     const totalItems = filtradas.length;
     const totalPaginas = Math.ceil(totalItems / itemsPorPaginaReparaciones) || 1;
 
-    // Medida de seguridad: Si estoy en la pagina 3, borro el unico aviso que habia en ella, la pagina 3 desaparece. Esto me auto-retrocede a la pagina 2 o a la 1 para no dejarme la pantalla en blanco.
     if (paginaActualReparaciones > totalPaginas) paginaActualReparaciones = totalPaginas;
     if (paginaActualReparaciones < 1) paginaActualReparaciones = 1;
 
-    // Extraigo del array general de avisos filtrados solamente el trozo que corresponde a la pagina que estoy viendo ahora mismo.
     const inicio = (paginaActualReparaciones - 1) * itemsPorPaginaReparaciones;
     const fin = inicio + itemsPorPaginaReparaciones;
     const paginadas = filtradas.slice(inicio, fin);
 
-    // Si tras todo esto resulta que no hay avisos para esta pestaña, pinto un mensaje amistoso.
     if (paginadas.length === 0) {
         tbodyPrincipal.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-500 italic">No hay avisos para mostrar.</td></tr>`;
     } else {
-        // Si tengo avisos, empiezo a recorrerlos uno a uno para construir su HTML.
         paginadas.forEach(rep => {
             let fechaFormateada = rep.fecha_entrada || (rep.created_at ? rep.created_at.substring(0,10) : 'S/F');
-
-            // Empaqueto el objeto entero del aviso en formato texto. Esto es vital para poder inyectarlo dentro de los botones (como el de editar) sin que las comillas rompan el codigo.
             const repCodificada = encodeURIComponent(JSON.stringify(rep));
 
-            // Preparo los botones de accion comprobando si tengo los datos necesarios. Si el cliente no tiene direccion guardada, el boton del mapa simplemente no se genera.
+            // Preparo todos los iconos estándar.
             let btnMapa = rep.cliente?.direccion ? `<button type="button" onclick="mostrarMapaDeTabla('${encodeURIComponent(rep.cliente.direccion)}')" class="text-green-600 p-2 hover:scale-125 inline-block">📍</button>` : '';
             let btnLlamar = rep.cliente?.telefono ? `<a href="tel:${rep.cliente.telefono}" class="text-blue-500 p-2 hover:scale-125 inline-block">📞</a>` : '';
             let btnBorrar = `<button onclick="borrarReparacion(${rep.id})" class="text-red-500 p-2 hover:scale-125 inline-block">🗑️</button>`;
             let btnEditar = `<button onclick="editarReparacion('${repCodificada}')" class="text-blue-500 p-2 transition hover:scale-125 inline-block" title="Editar">✏️</button>`;
             let btnEstadoRapido = '';
 
-            // Solo enseño el boton de generar el PDF si el aviso ya esta cerrado y terminado.
             let btnImprimir = '';
             if (rep.estado === 'terminado') {
                 btnImprimir = `<button onclick="generarPDFReparacion('${repCodificada}')" class="text-gray-600 p-2 hover:scale-125 inline-block" title="Imprimir Parte">🖨️</button>`;
             }
 
-            // Gestion de permisos visuales.
-            // Si soy tecnico, quito los botones peligrosos de borrar o editar todo el ticket, y a cambio configuro los botones grandes de flujo de trabajo segun como este el aviso.
+            // GESTIÓN DE PERMISOS Y BOTONES PARA EL TÉCNICO
             if (AppState.usuarioActual && AppState.usuarioActual.rol === 'tecnico') {
-                btnBorrar = ''; btnEditar = '';
+                btnBorrar = ''; btnEditar = ''; // El técnico no edita ni borra tickets enteros
+
                 if (rep.estado === 'pendiente') {
                     if (!rep.tecnico_id) {
-                        // El aviso no tiene dueño: Le pinto el boton para atraparlo.
-                        btnEstadoRapido = `<button onclick="asignarmeAviso(${rep.id})" class="text-yellow-600 p-2 transition hover:scale-125 inline-block font-bold" title="Coger este aviso libre">📥 Coger</button>`;
+                        // AQUÍ ESTÁ EL CAMBIO: Si el aviso está libre, le inyecto el mismo botón amarillo gigante de la otra pantalla.
+                        btnEstadoRapido = `<button onclick="asignarmeAviso(${rep.id})" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg font-bold shadow hover:bg-yellow-500 transition hover:scale-105 whitespace-nowrap">▶️ Coger Aviso</button>`;
+
+                        // Y cumplo con tu regla de "y ya está": le borro el teléfono y el mapa para que solo vea el botón amarillo.
+                        btnLlamar = '';
+                        btnMapa = '';
                     } else {
-                        // El aviso es suyo pero no ha empezado: Le pinto el boton de play.
+                        // Si el aviso ya es suyo, le dejo el botón normal de "Play" para empezarlo, y aquí sí verá el teléfono y el mapa.
                         btnEstadoRapido = `<button onclick="cambiarEstadoRapido(${rep.id}, 'en proceso')" class="text-yellow-500 p-2 transition hover:scale-125 inline-block" title="Empezar a trabajar">▶️</button>`;
                     }
                 }
-                // El aviso lo tiene a medias: Le pinto el boton de cerrar y cobrar.
-                else if (rep.estado === 'en proceso') btnEstadoRapido = `<button onclick="abrirModalFinalizar(${rep.id})" class="text-green-500 p-2 transition hover:scale-125 inline-block" title="Marcar como Terminado y añadir Piezas">✅</button>`;
+                else if (rep.estado === 'en proceso') {
+                    btnEstadoRapido = `<button onclick="abrirModalFinalizar(${rep.id})" class="text-green-500 p-2 transition hover:scale-125 inline-block" title="Marcar como Terminado y añadir Piezas">✅</button>`;
+                }
             } else {
-                // Si soy administrador, simplemente mantengo el boton de cerrar por si quiero liquidar un aviso a mano.
+                // Vista del Administrador
                 if (rep.estado !== 'terminado') btnEstadoRapido = `<button onclick="abrirModalFinalizar(${rep.id})" class="text-green-500 p-2 transition hover:scale-125 inline-block" title="Finalizar aviso directamente">✅</button>`;
             }
 
-            // Preparo un bloque extra de texto. Si el aviso ya esta terminado, inyecto una cajita verde justo debajo de la averia explicando la resolucion.
             let cajitaResolucion = '';
             if (rep.estado === 'terminado' && rep.resolucion_texto) {
                 cajitaResolucion = `<div class="mt-2 bg-green-50 p-3 rounded border border-green-200"><span class="block text-[10px] uppercase font-bold text-green-600 mb-1">✔️ Trabajo Realizado (${rep.tiempo_total || '-'}):</span><span class="text-sm text-gray-800">${rep.resolucion_texto}</span></div>`;
             }
 
-            // Preparo la informacion de la maquina si la tuviera.
             let infoMaquina = rep.maquina_id && rep.maquina ? `<div class="text-xs mt-1 text-teal-600 font-bold">🖨️ ${rep.maquina.modelo}</div>` : '';
 
             // Construyo las filas HTML usando todo lo que he preparado arriba y las inyecto en la tabla.
@@ -558,14 +548,13 @@ export function renderizarTablaReparaciones() {
         });
     }
 
-    // Finalmente, me encargo de la barra de controles de paginacion inferior.
+    // Finalmente, me encargo de la barra de controles de paginación inferior.
     const divPaginacion = document.getElementById('paginacion-reparaciones');
     if (divPaginacion) {
         divPaginacion.classList.remove('hidden');
         let filtroTxt = filtroEstadoReparaciones === 'todos' ? 'TODOS LOS AVISOS' : `AVISOS ${filtroEstadoReparaciones.toUpperCase()}S`;
         document.getElementById('texto-paginacion-rep').innerText = `Página ${paginaActualReparaciones} de ${totalPaginas} - (${totalItems} ${filtroTxt})`;
 
-        // Bloqueo el boton de retroceder si estoy en la primera pagina, y el de avanzar si he llegado al limite de paginas totales, para evitar que el usuario se salga de los limites.
         document.getElementById('btn-prev-rep').disabled = paginaActualReparaciones === 1;
         document.getElementById('btn-next-rep').disabled = paginaActualReparaciones === totalPaginas;
     }
