@@ -374,7 +374,7 @@ export async function cargarReparaciones(forzar = false) {
                         <span class="font-medium">${rep.cliente?.nombre || 'S/N'}</span><br>
                         <span class="text-xs font-bold text-blue-600">🖨️ ${rep.maquina?.modelo || 'Sin máquina'}</span>
                     </td>
-                    <td class="p-4 text-xs text-gray-700 max-w-xs">${rep.descripcion || ''}</td>
+                    <td class="p-4 text-sm text-gray-700 max-w-xs">${rep.descripcion || ''}</td>
                     <td class="p-4 text-center"><button onclick="asignarmeAviso(${rep.id})" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg font-bold shadow hover:bg-yellow-500 transition hover:scale-105">▶️ Coger Aviso</button></td>
                 </tr>`;
             }
