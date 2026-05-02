@@ -13,17 +13,33 @@ export function dibujarTablaMaquinas() {
     const tbody = document.getElementById('tabla-maquinas');
     if (!tbody) return;
 
+    // Capturo lo que el usuario ha escrito en el buscador de la derecha.
+    const buscador = document.getElementById('buscador_maquinas');
+    const query = buscador ? buscador.value.trim().toLowerCase() : '';
+
     // Primero vacío la tabla entera para que no se dupliquen las cosas cuando la vuelva a pintar.
     tbody.innerHTML = '';
 
-    // Si veo que mi almacén global no tiene ninguna máquina, pinto una sola fila avisando de que está vacío y corto la ejecución aquí.
-    if (AppState.listaMaquinas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-gray-500">No hay máquinas registradas.</td></tr>`;
+    // Si la caja de búsqueda está vacía, pinto el aviso y corto la ejecución aquí. Así no cargo toda la base de datos de golpe.
+    if (query.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-gray-500 italic">Escribe el modelo o el número de serie en el buscador para ver los resultados...</td></tr>`;
         return;
     }
 
-    // Si tengo máquinas, las recorro una a una.
-    AppState.listaMaquinas.forEach(maq => {
+    // Si ha pasado hay texto, filtro mi almacén global buscando coincidencias.
+    const filtradas = AppState.listaMaquinas.filter(maq =>
+        (maq.modelo && maq.modelo.toLowerCase().includes(query)) ||
+        (maq.numero_serie && maq.numero_serie.toLowerCase().includes(query))
+    );
+
+    // Si después de buscar resulta que no hay ninguna coincidencia, aviso al usuario.
+    if (filtradas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center py-6 text-gray-500">No se han encontrado máquinas con esos datos.</td></tr>`;
+        return;
+    }
+
+    // Si tengo máquinas que coinciden, las recorro una a una.
+    filtradas.forEach(maq => {
         // Por cada máquina, busco en mi lista de clientes a quién le pertenece usando el ID.
         const cliente = AppState.listaClientes.find(c => c.id === maq.cliente_id);
 

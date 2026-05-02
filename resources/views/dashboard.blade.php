@@ -744,7 +744,7 @@
 
                         <label class="block text-sm font-semibold mb-1 text-gray-700">Buscar Máquina:</label>
 
-                        <input type="text" id="buscador_maquinas" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Escribe el modelo o S/N...">
+                        <input type="text" id="buscador_maquinas" onkeyup="dibujarTablaMaquinas()" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-400 bg-gray-50" placeholder="Escribe el modelo o S/N...">
 
                     </div>
 
