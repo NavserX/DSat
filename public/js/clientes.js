@@ -207,8 +207,8 @@ export function filtrarTablaGestionClientes() {
             </td>
             <td class="py-3 px-4 text-center">
                 <div class="flex justify-center gap-1">
-                    <button onclick="editarClienteGestion('${cCod}')" class="text-blue-500 p-2 hover:scale-125 transition" title="Editar">Editar</button>
-                    <button onclick="borrarClienteGestion(${c.id})" class="text-red-500 p-2 hover:scale-125 transition" title="Borrar">Borrar</button>
+                    <button onclick="editarClienteGestion('${cCod}')" class="text-blue-500 p-2 hover:scale-125 transition" title="Editar Cliente">✏️</button>
+                    <button onclick="borrarClienteGestion(${c.id})" class="text-red-500 p-2 hover:scale-125 transition" title="Borrar Cliente">🗑️</button>
                 </div>
             </td>
         </tr>`;

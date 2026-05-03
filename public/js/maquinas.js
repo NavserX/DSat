@@ -58,8 +58,8 @@ export function dibujarTablaMaquinas() {
             </td>
             <td class="py-3 px-4 font-medium text-blue-700">${nombreCliente}</td>
             <td class="py-3 px-4 text-center">
-                <button onclick="editarMaquina('${maqCifrada}')" class="text-blue-500 p-2 hover:scale-125 transition" title="Editar / Cambiar Cliente">✏️</button>
-                <button onclick="borrarMaquina(${maq.id})" class="text-red-500 p-2 hover:scale-125 transition" title="Borrar">🗑️</button>
+                <button onclick="editarMaquina('${maqCifrada}')" class="text-blue-500 p-2 hover:scale-125 transition" title="Editar Máquina">✏️</button>
+                <button onclick="borrarMaquina(${maq.id})" class="text-red-500 p-2 hover:scale-125 transition" title="Borrar Máquina">🗑️</button>
             </td>
         </tr>`;
     });
