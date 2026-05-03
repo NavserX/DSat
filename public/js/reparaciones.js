@@ -893,39 +893,30 @@ export function buscarPiezaModal() {
 }
 
 export function generarPDFReparacion(repCodificada) {
-    // Creo el informe final. Decodifico el objeto y me quedo con sus componentes.
     const rep = JSON.parse(decodeURIComponent(repCodificada));
     const piezas = typeof rep.piezas_utilizadas === 'string' ? JSON.parse(rep.piezas_utilizadas) : (rep.piezas_utilizadas || []);
 
     const dominio = window.location.origin;
     const logoUrl = dominio + '/img/logo-web-ofimatica-digital.webp';
 
-    // Contadores de dinero para el PDF
+    // Contadores de dinero
     let costeManoObra = 0;
     let costePiezas = 0;
 
-    // Calculo de mano de obra
     if (rep.hora_inicio && rep.hora_fin) {
         const horaInicioLimpia = rep.hora_inicio.substring(0, 5);
         const horaFinLimpia = rep.hora_fin.substring(0, 5);
-
         const inicio = new Date(`2026-01-01T${horaInicioLimpia}:00`);
         const fin = new Date(`2026-01-01T${horaFinLimpia}:00`);
         let diffMins = Math.round((fin - inicio) / 60000);
-
-        if (diffMins < 0) {
-            diffMins += 24 * 60;
-        }
-
+        if (diffMins < 0) diffMins += 24 * 60;
         if (diffMins > 0) {
             costeManoObra = 70;
-            if (diffMins > 60) {
-                costeManoObra += Math.ceil((diffMins - 60) / 30) * 35;
-            }
+            if (diffMins > 60) costeManoObra += Math.ceil((diffMins - 60) / 30) * 35;
         }
     }
 
-    // Calculo y pintado de piezas
+    // Calculo de piezas
     let piezasHTML = '';
     if (piezas.length > 0) {
         piezasHTML = piezas.map(p => {
@@ -942,62 +933,19 @@ export function generarPDFReparacion(repCodificada) {
     const maquinaNombre = rep.maquina ? rep.maquina.modelo + ' (S/N: ' + rep.maquina.numero_serie + ')' : 'Aviso General';
     const fechaCierreVal = rep.fecha_cierre || rep.fecha_entrada;
 
-    // Inyecto todo el diseño del PDF web en una nueva pestaña.
-    const ventimp = window.open(' ', '_blank');
-    ventimp.document.write('<!DOCTYPE html><html><head><title>Parte #' + rep.id + '</title>');
-
-    // ETIQUETA CLAVE PARA MÓVILES: Evita que el móvil haga zoom y rompa el A4
-    ventimp.document.write('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
-
-    // ESTILOS FORZADOS A FORMATO A4
-    ventimp.document.write('<style>');
-    ventimp.document.write('@page { size: A4 portrait; margin: 1.5cm; } '); // Obliga al formato A4
-    ventimp.document.write('body { font-family: sans-serif; color: #333; max-width: 100%; margin: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; } '); // Fuerzo impresión de colores
-    ventimp.document.write('.header { display: flex; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 10px; } ');
-    ventimp.document.write('.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; } ');
-    ventimp.document.write('.caja { border: 1px solid #e5e7eb; padding: 10px; border-radius: 5px; background: #fdfdfd; } ');
-    ventimp.document.write('h3 { border-left: 4px solid #2563eb; padding-left: 10px; color: #1e3a8a; margin-top: 25px; margin-bottom: 10px; } ');
-    ventimp.document.write('table { width: 100%; border-collapse: collapse; margin-bottom: 20px; } ');
-    ventimp.document.write('th { background: #f9fafb; text-align: left; padding: 8px; border-bottom: 1px solid #ddd; } ');
-    ventimp.document.write('td { padding: 8px; border-bottom: 1px solid #eee; } ');
-    ventimp.document.write('.totales { float: right; width: 300px; border: 2px solid #1e3a8a; padding: 15px; border-radius: 5px; background: #f8fafc; } ');
-    ventimp.document.write('.totales-linea { display: flex; justify-content: space-between; margin-bottom: 5px; } ');
-    ventimp.document.write('.totales-gran { font-size: 1.2em; font-weight: bold; border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px; } ');
-    ventimp.document.write('.clear { clear: both; } ');
-    ventimp.document.write('.footer { margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid; } '); // page-break-inside evita que la firma se corte por la mitad
-    ventimp.document.write('</style></head><body>');
-
-    ventimp.document.write('<div class="header"><div><img src="' + logoUrl + '" style="max-width: 300px; height: auto;" alt="Digital Soluciones"></div><div style="text-align:right"><h3>PARTE DE TRABAJO</h3><p>Aviso: #' + rep.id + '</p></div></div>');
-
-    ventimp.document.write('<div class="grid"><div class="caja"><strong>Cliente:</strong><br>' + (rep.cliente?.nombre || 'S/N') + '<br>' + (rep.cliente?.direccion || '') + '</div>');
-    ventimp.document.write('<div class="caja"><strong>Fecha:</strong> ' + fechaCierreVal + '<br><strong>Técnico:</strong> ' + (rep.tecnico?.nombre || 'N/A') + '</div></div>');
-
-    ventimp.document.write('<p style="margin-top: 20px;"><strong>Máquina:</strong> ' + maquinaNombre + '</p>');
-    ventimp.document.write('<h3>Descripción Avería</h3><p>' + (rep.descripcion || 'Sin datos') + '</p>');
-    ventimp.document.write('<h3>Trabajo Realizado</h3><p>' + (rep.resolucion_texto || 'Pendiente') + '</p>');
-    ventimp.document.write('<p><strong>Horario:</strong> ' + (rep.hora_inicio || '--:--') + ' a ' + (rep.hora_fin || '--:--') + ' (' + (rep.tiempo_total || '-') + ')</p>');
-
-    ventimp.document.write('<h3>Piezas Utilizadas</h3><table><thead><tr><th>Ref</th><th>Descripción</th><th style="text-align:center">Cant</th><th style="text-align:right">Precio Ud.</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>' + piezasHTML + '</tbody></table>');
-
-    ventimp.document.write('<div class="totales"><div class="totales-linea"><span>Mano de obra:</span><span>' + costeManoObra.toFixed(2) + ' €</span></div><div class="totales-linea"><span>Total Piezas:</span><span>' + costePiezas.toFixed(2) + ' €</span></div><div class="totales-linea totales-gran"><span>TOTAL ESTIMADO:</span><span>' + totalFactura.toFixed(2) + ' €</span></div></div><div class="clear"></div>');
-
-    // ==========================================
-    // SELLO AUTOMÁTICO DEL TÉCNICO
-    // ==========================================
+    // Sello del técnico
     let nombreTecnico = rep.tecnico?.nombre || 'Sin asignar';
     let horaFinLimpia = rep.hora_fin ? rep.hora_fin.substring(0, 5) : '--:--';
     let fechaHoraCierre = (rep.fecha_cierre || 'S/F') + ' a las ' + horaFinLimpia;
 
     let cajaInfoTecnico = `
         <div style="width:250px; text-align:center; color:#4b5563;">
-            <strong style="color:#1e3a8a; font-size:1.1em;">Validación Técnica:</strong><br>
+            <strong style="color:#1e3a8a; font-size:1.1em;">Validación Técnica</strong><br>
             <span style="font-size:1.1em; display:block; margin-top:8px;">🧑‍🔧 ${nombreTecnico}</span>
             <span style="font-size:0.85em; color:#6b7280; display:block; margin-top:4px;">Cerrado el: ${fechaHoraCierre}</span>
         </div>`;
 
-    // ==========================================
-    // FIRMA DEL CLIENTE
-    // ==========================================
+    // Firma del cliente
     let cajaFirmaCliente = '';
     if (rep.firma_cliente) {
         cajaFirmaCliente = `
@@ -1012,10 +960,76 @@ export function generarPDFReparacion(repCodificada) {
         </div>`;
     }
 
-    // Inyecto ambas cajas en el pie de página
-    ventimp.document.write('<div class="footer">' + cajaInfoTecnico + cajaFirmaCliente + '</div>');
+    // ========================================================
+    // CONSTRUCCIÓN DEL DOCUMENTO VIRTUAL (Evita cuelgues)
+    // ========================================================
+    const htmlFinal = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Parte_${rep.id}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            @page { size: A4 portrait; margin: 1.5cm; }
+            body { font-family: sans-serif; color: #333; max-width: 100%; margin: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+            .caja { border: 1px solid #e5e7eb; padding: 10px; border-radius: 5px; background: #fdfdfd; }
+            h3 { border-left: 4px solid #2563eb; padding-left: 10px; color: #1e3a8a; margin-top: 25px; margin-bottom: 10px; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            th { background: #f9fafb; text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+            td { padding: 8px; border-bottom: 1px solid #eee; }
+            .totales { float: right; width: 300px; border: 2px solid #1e3a8a; padding: 15px; border-radius: 5px; background: #f8fafc; }
+            .totales-linea { display: flex; justify-content: space-between; margin-bottom: 5px; }
+            .totales-gran { font-size: 1.2em; font-weight: bold; border-top: 1px solid #ccc; padding-top: 10px; margin-top: 10px; }
+            .clear { clear: both; }
+            .footer { margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div><img src="${logoUrl}" style="max-width: 300px; height: auto;" alt="Digital Soluciones"></div>
+            <div style="text-align:right"><h3>PARTE DE TRABAJO</h3><p>Aviso: #${rep.id}</p></div>
+        </div>
+        <div class="grid">
+            <div class="caja"><strong>Cliente:</strong><br>${rep.cliente?.nombre || 'S/N'}<br>${rep.cliente?.direccion || ''}</div>
+            <div class="caja"><strong>Fecha:</strong> ${fechaCierreVal}<br><strong>Técnico:</strong> ${rep.tecnico?.nombre || 'N/A'}</div>
+        </div>
+        <p style="margin-top: 20px;"><strong>Máquina:</strong> ${maquinaNombre}</p>
+        <h3>Descripción Avería</h3><p>${rep.descripcion || 'Sin datos'}</p>
+        <h3>Trabajo Realizado</h3><p>${rep.resolucion_texto || 'Pendiente'}</p>
+        <p><strong>Horario:</strong> ${rep.hora_inicio || '--:--'} a ${rep.hora_fin || '--:--'} (${rep.tiempo_total || '-'})</p>
 
-    // Disparamos la impresión, y usamos onafterprint para cerrar la pestaña SOLO cuando el móvil haya terminado
-    ventimp.document.write('<script>setTimeout(function(){ window.print(); }, 1000); window.onafterprint = function(){ window.close(); };</script></body></html>');
-    ventimp.document.close();
+        <h3>Piezas Utilizadas</h3>
+        <table>
+            <thead><tr><th>Ref</th><th>Descripción</th><th style="text-align:center">Cant</th><th style="text-align:right">Precio Ud.</th><th style="text-align:right">Subtotal</th></tr></thead>
+            <tbody>${piezasHTML}</tbody>
+        </table>
+
+        <div class="totales">
+            <div class="totales-linea"><span>Mano de obra:</span><span>${costeManoObra.toFixed(2)} €</span></div>
+            <div class="totales-linea"><span>Total Piezas:</span><span>${costePiezas.toFixed(2)} €</span></div>
+            <div class="totales-linea totales-gran"><span>TOTAL ESTIMADO:</span><span>${totalFactura.toFixed(2)} €</span></div>
+        </div>
+        <div class="clear"></div>
+        <div class="footer">${cajaInfoTecnico}${cajaFirmaCliente}</div>
+
+        <script>
+            // El script espera pacientemente a que todo (logo e imágenes) se renderice antes de llamar a la impresora
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                }, 500);
+            };
+        </script>
+    </body>
+    </html>
+    `;
+
+    // Empaquetamos el HTML en un archivo Blob simulado
+    const blob = new Blob([htmlFinal], { type: 'text/html;charset=utf-8' });
+    const urlTemporal = URL.createObjectURL(blob);
+
+    // El navegador abrirá una ruta del estilo "blob:https://tusitio.com/..." y el móvil lo imprimirá sin problemas
+    window.open(urlTemporal, '_blank');
 }
