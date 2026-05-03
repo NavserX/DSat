@@ -15,6 +15,7 @@
 
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 
     <link rel="icon" href="{{ asset('favicon.png') }}" type="image/png">
 
@@ -1116,6 +1117,20 @@
 
             </table>
 
+        </div>
+
+        <!-- Sección de Firma Digital -->
+        <div class="mt-6 border-t pt-4">
+            <h3 class="text-lg font-bold text-blue-800 mb-3">✍️ Firma del Cliente</h3>
+
+            <!-- La clase touch-none es VITAL en móviles para que al firmar no se mueva la pantalla -->
+            <div class="border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 relative">
+                <canvas id="lienzo_firma" class="w-full h-40 cursor-crosshair rounded-lg touch-none"></canvas>
+            </div>
+
+            <div class="flex justify-end mt-2">
+                <button type="button" onclick="limpiarFirma()" class="text-xs text-red-500 font-bold hover:underline">🔄 Borrar firma</button>
+            </div>
         </div>
 
 

@@ -21,7 +21,8 @@ class Reparacion extends Model
         'hora_inicio',
         'hora_fin',
         'tiempo_total',
-        'fecha_cierre'
+        'fecha_cierre',
+        'firma_cliente',
     ];
 
     public function maquina()

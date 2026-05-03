@@ -59,6 +59,7 @@ class ReparacionController extends Controller
             'fecha_cierre' => 'nullable|date',
             'tiempo_total' => 'nullable|string',
             'piezas_utilizadas' => 'nullable|string',
+            'firma_cliente' => 'nullable|string',
         ]);
 
         // =========================================================

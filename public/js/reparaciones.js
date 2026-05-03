@@ -192,6 +192,15 @@ export async function cambiarEstadoRapido(id, nuevoEstado) {
 
 // --- MODAL DE FINALIZACION ---
 
+// Variable para el cuadro de firma
+let pizarraFirma;
+
+// Función para limpiar la firma si el cliente se equivoca
+export function limpiarFirma() {
+    if(pizarraFirma) pizarraFirma.clear();
+}
+window.limpiarFirma = limpiarFirma;
+
 export function abrirModalFinalizar(id) {
     // Preparo el cuadro para cerrar el aviso rellenando la fecha actual y la hora en la que he abierto el modal para ahorrarle teclear al tecnico.
     document.getElementById('fin_rep_id').value = id;
@@ -212,7 +221,30 @@ export function abrirModalFinalizar(id) {
     document.getElementById('add_pieza_cant').value = '1';
     dibujarTablaPiezas();
 
+    // Hacemos visible el modal ANTES de calcular el tamaño del lienzo
     document.getElementById('modal_finalizar').classList.remove('hidden');
+
+    // --- INICIO DE MODIFICACIÓN FIRMA ---
+    // Inicio el cuadro de firma cada vez que abro el modal
+    const canvas = document.getElementById('lienzo_firma');
+    if (canvas) {
+        // Esto es un truco para evitar firmas borrosas en móviles
+        const ratio =  Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+
+        if (!pizarraFirma) {
+            pizarraFirma = new SignaturePad(canvas, {
+                penColor: "rgb(17, 24, 39)",
+                backgroundColor: "rgb(249, 250, 251)"
+            });
+        } else {
+            pizarraFirma.clear();
+        }
+    }
+    // --- FIN DE MODIFICACIÓN FIRMA ---
+
 }
 
 export function cerrarModalFinalizar() {
@@ -294,7 +326,15 @@ export async function guardarFinalizacion() {
     const rep = AppState.todasLasReparaciones.find(r => r.id == id);
     if (!rep) return;
 
-    // Empaqueto la peticion completa. Convierto el array de piezas a un JSON en texto para que la base de datos se lo pueda tragar sin quejarse.
+    // --- INICIO DE MODIFICACIÓN FIRMA ---
+    // Extraigo la firma en formato Base64
+    let firmaBase64 = null;
+    if (pizarraFirma && !pizarraFirma.isEmpty()) {
+        firmaBase64 = pizarraFirma.toDataURL("image/png");
+    }
+    // --- FIN DE MODIFICACIÓN FIRMA ---
+
+    // Empaqueto la peticion completa añadiendo la firma
     const datos = {
         cliente_id: rep.cliente_id,
         tecnico_id: rep.tecnico_id || AppState.usuarioActual.id,
@@ -307,7 +347,8 @@ export async function guardarFinalizacion() {
         hora_fin: h_fin,
         fecha_cierre: f_cierre,
         tiempo_total: tiempoEmpleo,
-        piezas_utilizadas: JSON.stringify(AppState.piezasTemporales)
+        piezas_utilizadas: JSON.stringify(AppState.piezasTemporales),
+        firma_cliente: firmaBase64 // <- AQUÍ ENVIAMOS LA FIRMA
     };
 
     // Apago el boton para que no le den dobles clics y creen corrupcion de datos.
@@ -329,7 +370,7 @@ export async function guardarFinalizacion() {
     finally { btn.innerText = 'Cerrar Aviso'; btn.disabled = false; }
 }
 
-// --- CARGA DE TABLAS Y CRUD ---
+// --- CARGO DE TABLAS Y CRUD ---
 
 export async function cargarReparaciones(forzar = false) {
     // Metodo core de la pantalla. Si estoy escribiendo no la recargo para no borrarme el texto a mi mismo. Si fuerzo la carga, ignoro esto.
@@ -433,7 +474,7 @@ export async function cargarReparaciones(forzar = false) {
     } catch (error) { console.error(error); }
 }
 
-// --- DIBUJAR TABLA (PAGINADA Y FILTRADA) ---
+// --- DIBUJO TABLA (PAGINADA Y FILTRADA) ---
 
 export function renderizarTablaReparaciones() {
     // Localizo el cuerpo de la tabla principal en el HTML. Si no existe, corto la ejecución.
@@ -504,10 +545,10 @@ export function renderizarTablaReparaciones() {
 
                 if (rep.estado === 'pendiente') {
                     if (!rep.tecnico_id) {
-                        // AQUÍ ESTÁ EL CAMBIO: Si el aviso está libre, le inyecto el mismo botón amarillo gigante de la otra pantalla.
+                        // Si el aviso está libre, le inyecto el mismo botón amarillo gigante de la otra pantalla.
                         btnEstadoRapido = `<button onclick="asignarmeAviso(${rep.id})" class="bg-yellow-400 text-yellow-900 px-4 py-2 rounded-lg font-bold shadow hover:bg-yellow-500 transition hover:scale-105 whitespace-nowrap">▶️ Coger Aviso</button>`;
 
-                        // Y cumplo con tu regla de "y ya está": le borro el teléfono y el mapa para que solo vea el botón amarillo.
+                        // Y cumplo con la regla de "y ya está": le borro el teléfono y el mapa para que solo vea el botón amarillo.
                         btnLlamar = '';
                         btnMapa = '';
                     } else {
@@ -901,11 +942,11 @@ export function generarPDFReparacion(repCodificada) {
     const maquinaNombre = rep.maquina ? rep.maquina.modelo + ' (S/N: ' + rep.maquina.numero_serie + ')' : 'Aviso General';
     const fechaCierreVal = rep.fecha_cierre || rep.fecha_entrada;
 
-    // Inyecto todo el diseño del PDF web en una nueva pestaña.
+    // Inyecto todo el diseño del PDF web en una nueva pestaña. Fíjate en align-items:flex-end en .footer
     const ventimp = window.open(' ', '_blank');
     ventimp.document.write('<html><head><title>Parte #' + rep.id + '</title>');
 
-    ventimp.document.write('<style>body{font-family:sans-serif;padding:40px;color:#333;}.header{display:flex;justify-content:space-between;border-bottom:2px solid #2563eb;padding-bottom:10px;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;}.caja{border:1px solid #e5e7eb;padding:10px;border-radius:5px;}h3{border-left:4px solid #2563eb;padding-left:10px;color:#1e3a8a;}table{width:100%;border-collapse:collapse;margin-bottom:20px;}th{background:#f9fafb;text-align:left;padding:8px;border-bottom:1px solid #ddd;}td{padding:8px;border-bottom:1px solid #eee;}.totales{float:right; width:300px; border:2px solid #1e3a8a; padding:15px; border-radius:5px; background:#f8fafc;}.totales-linea{display:flex; justify-content:space-between; margin-bottom:5px;}.totales-gran{font-size:1.2em; font-weight:bold; border-top:1px solid #ccc; padding-top:10px; margin-top:10px;}.clear{clear:both;}.footer{margin-top:80px;display:flex;justify-content:space-between;}.firma{width:200px;border-top:1px solid #333;text-align:center;padding-top:10px;}</style></head><body>');
+    ventimp.document.write('<style>body{font-family:sans-serif;padding:40px;color:#333;}.header{display:flex;justify-content:space-between;border-bottom:2px solid #2563eb;padding-bottom:10px;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px;}.caja{border:1px solid #e5e7eb;padding:10px;border-radius:5px;}h3{border-left:4px solid #2563eb;padding-left:10px;color:#1e3a8a;}table{width:100%;border-collapse:collapse;margin-bottom:20px;}th{background:#f9fafb;text-align:left;padding:8px;border-bottom:1px solid #ddd;}td{padding:8px;border-bottom:1px solid #eee;}.totales{float:right; width:300px; border:2px solid #1e3a8a; padding:15px; border-radius:5px; background:#f8fafc;}.totales-linea{display:flex; justify-content:space-between; margin-bottom:5px;}.totales-gran{font-size:1.2em; font-weight:bold; border-top:1px solid #ccc; padding-top:10px; margin-top:10px;}.clear{clear:both;}.footer{margin-top:80px;display:flex;justify-content:space-between;align-items:flex-end;}</style></head><body>');
 
     ventimp.document.write('<div class="header"><div><img src="' + logoUrl + '" style="max-width: 300px; height: auto;" alt="Digital Soluciones"></div><div style="text-align:right"><h3>PARTE DE TRABAJO</h3><p>Aviso: #' + rep.id + '</p></div></div>');
 
@@ -921,7 +962,39 @@ export function generarPDFReparacion(repCodificada) {
 
     ventimp.document.write('<div class="totales"><div class="totales-linea"><span>Mano de obra:</span><span>' + costeManoObra.toFixed(2) + ' €</span></div><div class="totales-linea"><span>Total Piezas:</span><span>' + costePiezas.toFixed(2) + ' €</span></div><div class="totales-linea totales-gran"><span>TOTAL ESTIMADO:</span><span>' + totalFactura.toFixed(2) + ' €</span></div></div><div class="clear"></div>');
 
-    ventimp.document.write('<div class="footer"><div class="firma">Firma Técnico</div><div class="firma">Firma Cliente</div></div>');
+    // ==========================================
+    // SELLO AUTOMÁTICO DEL TÉCNICO
+    // ==========================================
+    let nombreTecnico = rep.tecnico?.nombre || 'Sin asignar';
+    let horaFinLimpia = rep.hora_fin ? rep.hora_fin.substring(0, 5) : '--:--';
+    let fechaHoraCierre = (rep.fecha_cierre || 'S/F') + ' a las ' + horaFinLimpia;
+
+    let cajaInfoTecnico = `
+        <div style="width:250px; text-align:center; color:#4b5563;">
+            <strong style="color:#1e3a8a; font-size:1.1em;">Validación Técnica:</strong><br>
+            <span style="font-size:1.1em; display:block; margin-top:8px;">🧑‍🔧 ${nombreTecnico}</span>
+            <span style="font-size:0.85em; color:#6b7280; display:block; margin-top:4px;">Cerrado el: ${fechaHoraCierre}</span>
+        </div>`;
+
+    // ==========================================
+    // FIRMA DEL CLIENTE
+    // ==========================================
+    let cajaFirmaCliente = '';
+    if (rep.firma_cliente) {
+        cajaFirmaCliente = `
+        <div style="width:200px; text-align:center;">
+            <img src="${rep.firma_cliente}" style="max-width:200px; max-height:80px;"><br>
+            <span style="border-top:1px solid #333; padding-top:5px; display:inline-block; width:100%;">Firma Cliente</span>
+        </div>`;
+    } else {
+        cajaFirmaCliente = `
+        <div style="width:200px; text-align:center; border-top:1px solid #333; padding-top:10px;">
+            Firma Cliente
+        </div>`;
+    }
+
+    // Inyectamos ambas cajas en el pie de página
+    ventimp.document.write('<div class="footer">' + cajaInfoTecnico + cajaFirmaCliente + '</div>');
 
     ventimp.document.write('<script>setTimeout(function(){ window.print(); window.close(); }, 800);</script></body></html>');
     ventimp.document.close();
