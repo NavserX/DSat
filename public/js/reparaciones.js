@@ -1015,7 +1015,7 @@ export function generarPDFReparacion(repCodificada) {
     // Inyecto ambas cajas en el pie de página
     ventimp.document.write('<div class="footer">' + cajaInfoTecnico + cajaFirmaCliente + '</div>');
 
-    // Doy más tiempo (1000ms) para móviles, ya que a veces tardan más en renderizar la imagen Base64 antes de imprimir
-    ventimp.document.write('<script>setTimeout(function(){ window.print(); window.close(); }, 1000);</script></body></html>');
+    // Disparamos la impresión, y usamos onafterprint para cerrar la pestaña SOLO cuando el móvil haya terminado
+    ventimp.document.write('<script>setTimeout(function(){ window.print(); }, 1000); window.onafterprint = function(){ window.close(); };</script></body></html>');
     ventimp.document.close();
 }
