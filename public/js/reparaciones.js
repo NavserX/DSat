@@ -990,7 +990,7 @@ export function generarPDFReparacion(repCodificada) {
 
     let cajaInfoTecnico = `
         <div style="width:250px; text-align:center; color:#4b5563;">
-            <strong style="color:#1e3a8a; font-size:1.1em;">Acreditación de Resolución</strong><br>
+            <strong style="color:#1e3a8a; font-size:1.1em;">Validación Técnica:</strong><br>
             <span style="font-size:1.1em; display:block; margin-top:8px;">🧑‍🔧 ${nombreTecnico}</span>
             <span style="font-size:0.85em; color:#6b7280; display:block; margin-top:4px;">Cerrado el: ${fechaHoraCierre}</span>
         </div>`;
