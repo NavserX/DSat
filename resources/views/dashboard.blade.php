@@ -1013,9 +1013,9 @@
 
 <!-- Como este modal tiene muchas cosas y es probable que no quepa entero en pantallas de moviles pequeños, le añado overflow-y-auto para que se pueda hacer scroll dentro de el sin problemas. -->
 
-<div id="modal_finalizar" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex justify-center items-center hidden overflow-y-auto py-10">
+<div id="modal_finalizar" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-50 flex justify-center items-center hidden py-4">
 
-    <div class="bg-white text-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl p-6 mx-4">
+    <div class="bg-white text-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl p-6 mx-4 max-h-[90vh] overflow-y-auto">
 
         <h2 class="text-2xl font-bold mb-2 border-b pb-2 text-green-600">✅ Finalizar Reparación #<span id="fin_rep_id_display"></span></h2>
 
