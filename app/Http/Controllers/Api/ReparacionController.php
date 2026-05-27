@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Reparacion;
 use App\Models\Pieza;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AvisoAsignadoMail;
+use App\Models\User;
 
 class ReparacionController extends Controller
 {
@@ -32,6 +35,18 @@ class ReparacionController extends Controller
 
         // Si los datos superan el filtro sin dar error, le ordeno al modelo que cree el registro en la base de datos.
         $reparacion = Reparacion::create($validated);
+
+        // =========================================================
+        // --- NUEVO: ENVÍO DE CORREO AL CREAR ---
+        // =========================================================
+        // Si la oficina acaba de crear el aviso y ya le ha asignado un técnico de primeras, le disparo el correo.
+        if ($reparacion->tecnico_id) {
+            $tecnico = User::find($reparacion->tecnico_id);
+            if ($tecnico && $tecnico->email) {
+                Mail::to($tecnico->email)->send(new AvisoAsignadoMail($reparacion));
+            }
+        }
+        // =========================================================
 
         // Devuelvo el aviso recién creado con un código 201, que en el estándar web significa "Creado con éxito".
         return response()->json($reparacion, 201);
@@ -97,8 +112,24 @@ class ReparacionController extends Controller
         }
         // =========================================================
 
+        // --- TRUCO PARA EL CORREO: Guardo quién era el técnico ANTES de actualizar ---
+        $tecnicoAnterior = $reparacion->tecnico_id;
+
         // Finalmente, una vez procesado el tema del inventario, aplasto los datos viejos de la reparación con los datos nuevos que han pasado la validación.
         $reparacion->update($validated);
+
+        // =========================================================
+        // --- NUEVO: ENVÍO DE CORREO AL ACTUALIZAR/ASIGNAR ---
+        // =========================================================
+        // Solo envío el correo si el aviso ahora tiene técnico Y ese técnico es DIFERENTE al que había antes.
+        // Así no hago Spam al técnico cada vez que él mismo guarda o cierra su propia reparación.
+        if ($reparacion->tecnico_id && $reparacion->tecnico_id !== $tecnicoAnterior) {
+            $tecnico = User::find($reparacion->tecnico_id);
+            if ($tecnico && $tecnico->email) {
+                Mail::to($tecnico->email)->send(new AvisoAsignadoMail($reparacion));
+            }
+        }
+        // =========================================================
 
         // Respondo al frontend con un código 200 (OK) y los datos actualizados para que los pinte en la tabla.
         return response()->json($reparacion, 200);
