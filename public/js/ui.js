@@ -104,10 +104,10 @@ export function mostrarMapaDeTabla(dir) {
     const map = document.getElementById('mapa_container');
 
     // Convierto la dirección a un formato seguro para internet (encodeURIComponent) y se la pego a la URL interna del iFrame de Google Maps para que la incruste.
-    document.getElementById('google_map_iframe').src = `https://maps.google.com/maps?q=${encodeURIComponent(dir)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
+    document.getElementById('google_map_iframe').src = `https://maps.google.com/maps?q=${decodeURIComponent(dir)}&t=&z=16&ie=UTF8&iwloc=&output=embed`;
 
     // También actualizo el botón externo para que, si el usuario hace clic, le lleve directamente a Google Maps en otra pestaña o le abra la aplicación en el móvil.
-    document.getElementById('link_como_llegar').href = `https://maps.google.com/maps?q=${encodeURIComponent(dir)}`;
+    document.getElementById('link_como_llegar').href = `https://maps.google.com/maps?q=${decodeURIComponent(dir)}`;
 
     // Hago visible el bloque del mapa.
     if (map) map.classList.remove('hidden');
