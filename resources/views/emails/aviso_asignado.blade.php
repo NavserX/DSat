@@ -8,7 +8,7 @@
 <div style="max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; border-top: 4px solid #2563eb;">
     <h2 style="color: #1e3a8a;">¡Tienes un nuevo aviso asignado!</h2>
 
-    <p>Hola, desde la central te han asignado una nueva reparación.</p>
+    <p>Hola, te han asignado un aviso desde el portal DSat.</p>
 
     <div style="background-color: #f8fafc; padding: 15px; border-left: 4px solid #3b82f6; margin: 20px 0;">
         <p><strong>Aviso Nº:</strong> #{{ $reparacion->id }}</p>
