@@ -117,6 +117,83 @@ window.logout = function() {
 
 
 // ==========================================================================
+// NAVEGACIÓN POR TECLADO (INYECTADA DIRECTAMENTE, SIN TOCAR EL HTML)
+// ==========================================================================
+
+let focoActual = -1;
+
+window.navegarConTeclado = function(evento, idLista) {
+    const lista = document.getElementById(idLista);
+    if (!lista || lista.classList.contains('hidden')) {
+        focoActual = -1;
+        return;
+    }
+
+    const opciones = lista.getElementsByTagName('li');
+    if (!opciones || opciones.length === 0) return;
+
+    if (evento.key === "ArrowDown") {
+        evento.preventDefault();
+        focoActual++;
+        resaltarOpcion(opciones);
+    }
+    else if (evento.key === "ArrowUp") {
+        evento.preventDefault();
+        focoActual--;
+        resaltarOpcion(opciones);
+    }
+    else if (evento.key === "Enter") {
+        evento.preventDefault();
+        if (focoActual > -1 && opciones[focoActual]) {
+            opciones[focoActual].click();
+            focoActual = -1;
+        }
+    }
+    else {
+        focoActual = -1;
+    }
+}
+
+function resaltarOpcion(opciones) {
+    for (let i = 0; i < opciones.length; i++) {
+        opciones[i].classList.remove('bg-blue-100', 'text-blue-900', 'font-bold');
+    }
+
+    if (focoActual >= opciones.length) focoActual = 0;
+    if (focoActual < 0) focoActual = (opciones.length - 1);
+
+    opciones[focoActual].classList.add('bg-blue-100', 'text-blue-900', 'font-bold');
+    opciones[focoActual].scrollIntoView({ block: "nearest" });
+}
+
+// 🎯 TRUCO MÁGICO 1: Escucho las teclas que se pulsan en toda la web. Si se pulsan sobre uno de los inputs especiales, activo la navegación.
+document.addEventListener('keydown', function(event) {
+    const mapeoBuscadores = {
+        'cliente_search': 'cliente_dropdown',
+        'historial_cliente_search': 'historial_cliente_dropdown',
+        'maq_cliente_search': 'maq_cliente_dropdown',
+        'add_pieza_ref': 'dropdown_piezas_modal'
+    };
+
+    const listaId = mapeoBuscadores[event.target.id];
+    if (listaId) {
+        window.navegarConTeclado(event, listaId);
+    }
+});
+
+// 🎯 TRUCO MÁGICO 2: Atrapo el evento 'keyup' en el aire (fase de captura) y lo MATO si es Enter o Flecha. Así evito que llegue a tu HTML y borre lo que has elegido.
+document.addEventListener('keyup', function(event) {
+    const mapeoBuscadores = ['cliente_search', 'historial_cliente_search', 'maq_cliente_search', 'add_pieza_ref'];
+
+    if (mapeoBuscadores.includes(event.target.id)) {
+        if (['Enter', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+            event.stopPropagation(); // Esto detiene el evento antes de que el 'onkeyup' de tu HTML se entere
+        }
+    }
+}, true); // El 'true' al final es fundamental, significa "atrapalo al bajar, no al subir".
+
+
+// ==========================================================================
 // ARRANQUE DEL SISTEMA
 // ==========================================================================
 
