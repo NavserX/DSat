@@ -24,7 +24,7 @@ class ReparacionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // 2. Me traigo SOLO los últimos 50 avisos que ya estén "terminados".
+        // 2. Me traigo SOLO los últimos avisos que ya estén "terminados".
         // Ordeno por 'updated_at' de más reciente a más antiguo para coger justo los últimos que se cerraron.
         $terminados = Reparacion::with(['cliente', 'tecnico', 'maquina'])
             ->where('estado', 'terminado')
