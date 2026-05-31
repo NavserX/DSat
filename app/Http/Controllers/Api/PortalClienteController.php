@@ -68,7 +68,7 @@ class PortalClienteController extends Controller
                 'nombreCliente' => $nombreCliente
             ], function ($message) {
                 $message->to('taller@ofimaticadigital.es')
-                    ->subject('🔴 NUEVO AVISO - ' . now()->format('d/m/Y H:i'));
+                    ->subject('🔴 Nuevo aviso creado en el portal de cliente!');
             });
         } catch (\Exception $e) {
             // Si el correo falla, lo ignoro para no asustar al cliente.
