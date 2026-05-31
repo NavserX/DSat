@@ -1026,10 +1026,10 @@ export function generarPDFReparacion(repCodificada) {
     </html>
     `;
 
-    // Empaquetamos el HTML en un archivo Blob simulado
+    // Empaqueto el HTML en un archivo Blob simulado
     const blob = new Blob([htmlFinal], { type: 'text/html;charset=utf-8' });
     const urlTemporal = URL.createObjectURL(blob);
 
-    // El navegador abrirá una ruta del estilo "blob:https://tusitio.com/..." y el móvil lo imprimirá sin problemas
+    // El navegador abrirá una ruta y el móvil lo imprimirá sin problemas
     window.open(urlTemporal, '_blank');
 }

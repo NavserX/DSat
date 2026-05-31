@@ -14,10 +14,26 @@ class ReparacionController extends Controller
 {
     public function index()
     {
-        // Con esta función respondo cuando mi frontend me pide la lista de todos los avisos.
-        // Uso el método "with" para pedirle a Laravel que, de paso que me trae la reparación, haga un cruce con las tablas de cliente, técnico y máquina.
-        // Así me traigo toda la información de golpe y evito que la base de datos se sature haciendo cientos de consultas individuales luego.
-        return Reparacion::with(['cliente', 'tecnico', 'maquina'])->get();
+        // Con esta función respondo cuando mi frontend me pide la lista de los avisos.
+        // Como no quiero saturar la memoria del navegador enviando miles de avisos históricos cerrados,
+        // voy a dividir la consulta en dos partes.
+
+        // 1. Me traigo TODOS los avisos que estén "vivos" (pendientes o en proceso) sin límite.
+        $activos = Reparacion::with(['cliente', 'tecnico', 'maquina'])
+            ->where('estado', '!=', 'terminado')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 2. Me traigo SOLO los últimos 50 avisos que ya estén "terminados".
+        // Ordeno por 'updated_at' de más reciente a más antiguo para coger justo los últimos que se cerraron.
+        $terminados = Reparacion::with(['cliente', 'tecnico', 'maquina'])
+            ->where('estado', 'terminado')
+            ->orderBy('updated_at', 'desc')
+            ->take(20) // Aquí defino el número de avisos máximo que quiero en la pestaña de terminados
+            ->get();
+
+        // 3. Fusiono las dos listas en una sola (merge) y se la devuelvo al Frontend de golpe.
+        return $activos->merge($terminados);
     }
 
     public function store(Request $request)
