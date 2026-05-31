@@ -232,7 +232,7 @@
     }
 
     // =================================================================
-    // 3. DIBUJAR LAS TARJETAS DEL HISTORIAL (Sin tocar el formulario)
+    // 3. DIBUJAR LAS TARJETAS DEL HISTORIAL
     // =================================================================
     function dibujarHistorialCliente() {
         const listaHistorial = document.getElementById('lista_historial_cliente');
@@ -241,10 +241,10 @@
         if(datosClienteActual.ultimos_avisos && datosClienteActual.ultimos_avisos.length > 0) {
             datosClienteActual.ultimos_avisos.forEach(aviso => {
 
-                // Preparo los colores y textos exactamente iguales a mi panel técnico
                 let badgeColor = 'bg-yellow-100 text-yellow-800 border-yellow-200';
                 let icon = 'fa-clock';
                 let textoEstado = 'Pendiente';
+                let htmlResolucion = '';
 
                 if(aviso.estado === 'en proceso') {
                     badgeColor = 'bg-blue-100 text-blue-800 border-blue-200';
@@ -254,17 +254,40 @@
                     badgeColor = 'bg-green-100 text-green-800 border-green-200';
                     icon = 'fa-check-circle';
                     textoEstado = 'Terminada';
+
+                    // ==========================================================
+                    // CAJA DE LA RESOLUCIÓN / DESCRIPCIÓN DEL TÉCNICO
+                    // ==========================================================
+                    let nombreTecnico = aviso.tecnico ? aviso.tecnico.nombre : 'Nuestro equipo';
+                    let textoResolucion = aviso.resolucion_texto ? aviso.resolucion_texto : 'Sin descripción detallada.';
+
+                    // Preparamos la fecha de cierre bonita
+                    let textoFechaCierre = '';
+                    if (aviso.fecha_cierre) {
+                        let partesCierre = aviso.fecha_cierre.substring(0, 10).split('-');
+                        if (partesCierre.length === 3) {
+                            textoFechaCierre = ` el <b>${partesCierre[2]}/${partesCierre[1]}/${partesCierre[0]}</b>`;
+                        }
+                    }
+
+                    htmlResolucion = `
+                        <div class="mt-4 bg-green-50 p-3 rounded-lg border border-green-200 text-sm shadow-inner">
+                            <p class="text-green-800 font-bold mb-1">
+                                <i class="fas fa-clipboard-check mr-1"></i> Descripción de la avería:
+                            </p>
+                            <p class="text-green-700 italic">"${textoResolucion}"</p>
+                            <p class="text-xs text-green-600 mt-2 text-right font-medium">
+                                👨‍🔧 Cerrado por: <b>${nombreTecnico}</b>${textoFechaCierre}
+                            </p>
+                        </div>
+                    `;
                 }
 
-                // Saco el nombre de la máquina (si la puso)
                 let nombreMaquina = aviso.maquina ? aviso.maquina.modelo : 'Equipo sin especificar';
-
-                // Cojo solo la fecha (los 10 primeros caracteres) y le doy la vuelta para leerla bien en España
                 let fechaRaw = aviso.created_at ? aviso.created_at.substring(0, 10) : aviso.fecha_entrada;
                 let partes = fechaRaw.split('-');
                 let fechaFormateada = partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : fechaRaw;
 
-                // Inyecto la tarjetita directamente en el HTML
                 listaHistorial.innerHTML += `
                         <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition shadow-sm">
                             <div class="flex justify-between items-start mb-2">
@@ -273,13 +296,16 @@
                                     <i class="fas ${icon} mr-1"></i> ${textoEstado}
                                 </span>
                             </div>
-                            <p class="text-sm text-gray-600 line-clamp-2">${aviso.descripcion}</p>
+
+                            <p class="text-sm text-gray-600 line-clamp-2"><span class="font-semibold">Tu aviso:</span> ${aviso.descripcion}</p>
+
                             <p class="text-xs text-gray-400 mt-3 font-medium">Registrado: ${fechaFormateada}</p>
+
+                            ${htmlResolucion}
                         </div>
                     `;
             });
         } else {
-            // Si no tiene historial, le pinto un icono de carpeta vacía
             listaHistorial.innerHTML = `
                     <div class="text-center py-8">
                         <i class="fas fa-folder-open text-gray-300 text-4xl mb-3"></i>

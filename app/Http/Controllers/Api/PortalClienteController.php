@@ -29,7 +29,7 @@ class PortalClienteController extends Controller
 
         // Traigo los últimos 5 avisos de este cliente ---
         // Uso 'with' para traer el nombre de la máquina y orderBy para coger los más nuevos
-        $ultimos_avisos = Reparacion::with('maquina')
+        $ultimos_avisos = Reparacion::with(['maquina', 'tecnico'])
             ->where('cliente_id', $cliente->id)
             ->orderBy('created_at', 'desc')
             ->take(5)
