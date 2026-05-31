@@ -213,5 +213,29 @@ async function iniciarApp() {
     await cargarReparaciones();
 }
 
+// ==========================================================================
+// OCULTAR EL MAPA AUTOMÁTICAMENTE (VIGILANTE GLOBAL)
+// ==========================================================================
+document.addEventListener('click', function(event) {
+    const mapa = document.getElementById('mapa_container');
+
+    // Si el mapa ya está oculto o no existe en esta pantalla, no hace nada
+    if (!mapa || mapa.classList.contains('hidden')) return;
+
+    const clicado = event.target;
+
+    // Aqui defino los elementos que NO deben cerrar el mapa si hago clic en ellos:
+    if (clicado.closest('#mapa_container') ||
+        clicado.closest('#cliente_dropdown') ||
+        clicado.closest('#cliente_search') ||
+        (clicado.textContent && clicado.textContent.includes('📍')) || // Si pincho en el icono del mapa
+        clicado.closest('[onclick*="Mapa"]')) { // O en cualquier botón que llame a mostrarMapa
+        return;
+    }
+
+    // Si has hego clic en cualquier otra cosa de la pantalla, lo oculto.
+    mapa.classList.add('hidden');
+});
+
 // Por ultimo, nada mas leer este archivo (es decir, en cuanto se carga la web), ejecuto la secuencia de arranque.
 iniciarApp();
