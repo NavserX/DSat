@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\MaquinaController;
 use App\Http\Controllers\Api\PiezaController;
 use App\Http\Controllers\Api\ReparacionController;
+use App\Http\Controllers\Api\PortalClienteController;
 use App\Models\Cliente;
 use App\Models\Tecnico;
 use App\Models\User;
@@ -38,6 +39,10 @@ Route::post('/login', function (Request $request) {
         'token_type' => 'Bearer',
     ]);
 });
+
+// Rutas exclusivas para el Portal del Cliente (Aisladas del panel técnico)
+Route::post('/portal-cliente/login', [PortalClienteController::class, 'login']);
+Route::post('/portal-cliente/aviso', [PortalClienteController::class, 'guardarAviso']);
 
 /**
  * --- ZONA BLINDADA (MIDDLEWARE) ---
@@ -122,6 +127,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tecnicos', function () {
         return Tecnico::all();
     });
+
 
     // Esta ruta ya no la usa el frontend, pero la dejo comentada por si en un futuro la necesitas
     /*

@@ -467,7 +467,7 @@ export async function cargarReparaciones(forzar = false) {
                     await cargarReparaciones();
                     await cargarPiezas();
                 }
-            }, 10000);
+            }, 5000);
         }
         filtrarHistorialTecnicos();
         if (AppState.clienteHistorialActual) aplicarFiltroFechasCliente();

@@ -16,3 +16,5 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 });
 
+Route::view('/portal', 'portal-cliente');
+

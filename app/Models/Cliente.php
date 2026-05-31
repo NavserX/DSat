@@ -8,4 +8,10 @@ class Cliente extends Model
 {
     protected $table = 'clientes';
     protected $fillable = ['nombre', 'email' , 'telefono', 'direccion'];
+
+    public function maquinas()
+    {
+        return $this->hasMany(Maquina::class, 'cliente_id');
+    }
+
 }
