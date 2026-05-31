@@ -167,7 +167,7 @@
 
                 <!-- PANEL IZQUIERDO: CREACION DE AVISOS -->
 
-                <div id="caja-formulario-reparacion" class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-1 lg:order-1 relative">
+                <div id="caja-formulario-reparacion" class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-1 lg:order-1 relative h-fit">
 
                     <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title">Nueva Reparación</h2>
 
@@ -587,7 +587,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
-                <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative">
+                <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative h-fit">
 
                     <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title-cliente">Añadir Cliente</h2>
 
@@ -693,7 +693,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
-                <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative">
+                <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative h-fit">
 
                     <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title-maquina">Añadir Máquina</h2>
 
@@ -793,7 +793,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
-                <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative">
+                <div class="bg-white text-gray-800 p-5 lg:p-6 rounded-2xl shadow-xl order-2 lg:order-1 relative h-fit">
 
                     <h2 class="text-xl font-semibold mb-4 border-b pb-2" id="form-title-pieza">Añadir Pieza</h2>
 
