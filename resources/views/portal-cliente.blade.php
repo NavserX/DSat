@@ -233,14 +233,16 @@
     // Función para limpiar la pantalla y escribir un aviso nuevo
     // =================================================================
     function prepararNuevoAviso() {
-        // Vaciamos la caja de texto
+        // Vacio la caja de texto
         document.getElementById('texto_averia').value = "";
+        // Vacio también la selección de maquina
+        document.getElementById('select_maquina').value = "";
 
-        // Ocultamos el mensaje verde de éxito
+        // Oculto el mensaje verde de éxito
         const mensajeExito = document.getElementById('exito-aviso');
         if (mensajeExito) mensajeExito.classList.add('hidden');
 
-        // Volvemos a mostrar el botón de enviar
+        // Vuelvo a mostrar el botón de enviar
         const btn = document.getElementById('btn-enviar');
         if (btn) {
             btn.classList.remove('hidden');
