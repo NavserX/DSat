@@ -18,19 +18,26 @@ class PortalClienteController extends Controller
             'telefono' => 'required'
         ]);
 
-        // Busco en la base de datos un cliente que tenga EXACTAMENTE ese email y teléfono.
-        // Además, uso 'with' para traerme las máquinas que tiene asignadas.
         $cliente = Cliente::with('maquinas')
             ->where('email', $request->email)
             ->where('telefono', $request->telefono)
             ->first();
 
-        // Si no lo encuentro, devuelvo un error.
         if (!$cliente) {
             return response()->json(['message' => 'Credenciales incorrectas o cliente no encontrado.'], 404);
         }
 
-        // Si lo encuentro, le devuelvo sus datos y sus máquinas al frontend.
+        // Traigo los últimos 5 avisos de este cliente ---
+        // Uso 'with' para traer el nombre de la máquina y orderBy para coger los más nuevos
+        $ultimos_avisos = Reparacion::with('maquina')
+            ->where('cliente_id', $cliente->id)
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Le pego ese historial al cliente para enviarlo al Javascript
+        $cliente->ultimos_avisos = $ultimos_avisos;
+
         return response()->json($cliente, 200);
     }
 
