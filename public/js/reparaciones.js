@@ -460,13 +460,19 @@ export async function cargarReparaciones(forzar = false) {
         // El pulso en segundo plano que vigila los cambios.
         if (!window.intervaloRealTime) {
             window.intervaloRealTime = setInterval(async () => {
+
+                // 1. Ejecutamos cargarReparaciones() SIEMPRE, sin importar en qué pantalla estés.
+                // Así, tu código podrá leer la base de datos y encender la burbuja amarilla en el menú lateral en todo momento.
+                await cargarReparaciones();
+
+                // 2. Las piezas del inventario sí podemos condicionarlas para no hacer trabajar al navegador a lo tonto.
                 const pRep = document.getElementById('pantalla_reparaciones');
-                const pLib = document.getElementById('pantalla_libres');
                 const pInv = document.getElementById('pantalla_inventario');
-                if ((pRep && !pRep.classList.contains('hidden')) || (pLib && !pLib.classList.contains('hidden')) || (pInv && !pInv.classList.contains('hidden'))) {
-                    await cargarReparaciones();
+
+                if ((pRep && !pRep.classList.contains('hidden')) || (pInv && !pInv.classList.contains('hidden'))) {
                     await cargarPiezas();
                 }
+
             }, 5000);
         }
         filtrarHistorialTecnicos();

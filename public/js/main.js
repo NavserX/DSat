@@ -239,3 +239,5 @@ document.addEventListener('click', function(event) {
 
 // Por ultimo, nada mas leer este archivo (es decir, en cuanto se carga la web), ejecuto la secuencia de arranque.
 iniciarApp();
+
+
