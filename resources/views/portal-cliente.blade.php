@@ -123,6 +123,10 @@
                     <i class="fas fa-check-circle mr-2"></i> ¡Aviso registrado! Un técnico lo revisará pronto.
                 </div>
 
+                <div id="alerta-tope-avisos" class="hidden mt-6 bg-yellow-50 text-yellow-800 p-4 rounded-lg text-sm font-medium border border-yellow-200 shadow-sm">
+                    <i class="fas fa-exclamation-triangle mr-2 text-yellow-600"></i>
+                    <b>Formulario bloqueado:</b> Has alcanzado el límite de 3 avisos en estado "Pendiente". Espera a que los técnicos atiendan tus solicitudes actuales para abrir una nueva.
+                </div>
                 <button id="btn-enviar" onclick="enviarAvisoCliente()" class="w-full mt-8 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md">
                     <i class="fas fa-paper-plane mr-2"></i> Enviar Aviso al Taller
                 </button>
@@ -180,6 +184,11 @@
 
                 // Oculto el mensaje de error por si estaba visible
                 errorBox.classList.add('hidden');
+
+                // Guardo credenciales en el navegador contra F5
+
+                localStorage.setItem('dsat_email', email);
+                localStorage.setItem('dsat_telefono', telefono);
 
                 // Cambio a la pantalla del panel
                 abrirPanelCliente();
@@ -312,6 +321,37 @@
                         <p class="text-gray-500 italic">Aún no tienes avisos registrados.</p>
                     </div>`;
         }
+
+        // =================================================================
+        // COMPROBAR TOPE DE AVISOS PENDIENTES Y BLOQUEAR BOTÓN
+        // =================================================================
+        let avisosPendientes = 0;
+        if(datosClienteActual.ultimos_avisos) {
+            avisosPendientes = datosClienteActual.ultimos_avisos.filter(a => a.estado === 'pendiente').length;
+        }
+
+        const btnEnviar = document.getElementById('btn-enviar');
+        const alertaTope = document.getElementById('alerta-tope-avisos');
+
+        if (avisosPendientes >= 3) {
+            // BLOQUEO: Oculto el botón completamente y muestro la alerta amarilla
+            if(btnEnviar) btnEnviar.classList.add('hidden');
+            if(alertaTope) alertaTope.classList.remove('hidden');
+        } else {
+            // DESBLOQUEO: Oculto la alerta amarilla
+            if(alertaTope) alertaTope.classList.add('hidden');
+
+            if(btnEnviar) {
+                // Solo restauro el botón si NO está el mensaje verde de "Enviado" en pantalla
+                if(document.getElementById('exito-aviso').classList.contains('hidden')) {
+                    btnEnviar.classList.remove('hidden');
+                    // Limpio las clases del candado por si acaso las tuviera de antes
+                    btnEnviar.disabled = false;
+                    btnEnviar.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btnEnviar.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Enviar Aviso al Taller';
+                }
+            }
+        }
     }
 
     // =================================================================
@@ -424,20 +464,36 @@
     // 6. LIMPIAR PANTALLA PARA ESCRIBIR UN AVISO NUEVO
     // =================================================================
     function prepararNuevoAviso() {
-        // Vacio la caja de texto y la selección de la máquina
+        // Vacio las cajas de texto
         document.getElementById('texto_averia').value = "";
         document.getElementById('select_maquina').value = "";
 
-        // Oculto el mensaje verde de éxito si estaba puesto
+        // Oculto el mensaje verde de éxito
         const mensajeExito = document.getElementById('exito-aviso');
         if (mensajeExito) mensajeExito.classList.add('hidden');
 
-        // Vuelvo a activar y a mostrar el botón de enviar
+        // Compruebo si tiene el límite de avisos
+        let avisosPendientes = 0;
+        if(datosClienteActual && datosClienteActual.ultimos_avisos) {
+            avisosPendientes = datosClienteActual.ultimos_avisos.filter(a => a.estado === 'pendiente').length;
+        }
+
         const btn = document.getElementById('btn-enviar');
+        const alertaTope = document.getElementById('alerta-tope-avisos');
+
         if (btn) {
-            btn.classList.remove('hidden');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Enviar Aviso al Taller';
+            if (avisosPendientes >= 3) {
+                // Si tiene 3 o más, OCULTO el botón y muestro la alerta
+                btn.classList.add('hidden');
+                if (alertaTope) alertaTope.classList.remove('hidden');
+            } else {
+                // Si tiene menos de 3, MUESTRO el botón azul listo para enviar
+                btn.classList.remove('hidden');
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> Enviar Aviso al Taller';
+                if (alertaTope) alertaTope.classList.add('hidden');
+            }
         }
     }
 
@@ -450,6 +506,11 @@
 
         // Vacio la memoria
         datosClienteActual = null;
+
+        // Borrar credenciales de la memoria al salir
+
+        localStorage.removeItem('dsat_email');
+        localStorage.removeItem('dsat_telefono');
 
         // Vacio los inputs y limpio el formulario
         document.getElementById('cli_email').value = "";
@@ -472,6 +533,25 @@
         document.getElementById('vista-login').classList.remove('hidden');
         document.getElementById('vista-login').classList.add('flex');
     }
+
+    // =================================================================
+    // 8. AUTO-LOGIN (Por si el cliente pulsa F5)
+    // =================================================================
+    window.onload = function() {
+        // Miro si el navegador se acuerda de quién somos
+        const emailGuardado = localStorage.getItem('dsat_email');
+        const telefonoGuardado = localStorage.getItem('dsat_telefono');
+
+        if (emailGuardado && telefonoGuardado) {
+            // Si se acuerda, relleno las cajas de texto de forma invisible...
+            document.getElementById('cli_email').value = emailGuardado;
+            document.getElementById('cli_telefono').value = telefonoGuardado;
+
+            // ... y simulo que el cliente ha pulsado el botón de "Entrar"
+            intentarLoginCliente();
+        }
+    };
+
 </script>
 </body>
 </html>

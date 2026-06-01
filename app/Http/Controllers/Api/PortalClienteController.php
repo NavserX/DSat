@@ -50,6 +50,20 @@ class PortalClienteController extends Controller
             'descripcion' => 'required|string'
         ]);
 
+        // =========================================================
+        // --- TOPE DE 3 AVISOS PENDIENTES ---
+        // =========================================================
+        $pendientes = Reparacion::where('cliente_id', $request->cliente_id)
+            ->where('estado', 'pendiente')
+            ->count();
+
+        if ($pendientes >= 3) {
+            return response()->json([
+                'message' => 'Límite alcanzado: Ya tienes 3 avisos pendientes. Por favor, espera a que nuestros técnicos los gestionen.'
+            ], 403);
+        }
+        // =========================================================
+
         // Creo el aviso exactamente igual que si lo hiciera un admin,
         // forzando el estado a 'pendiente' y apuntando la fecha de hoy.
         $reparacion = Reparacion::create([
