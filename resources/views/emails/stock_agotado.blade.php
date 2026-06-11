@@ -15,7 +15,6 @@
     <ul>
         <li><strong>Referencia:</strong> {{ $pieza->referencia }}</li>
         <li><strong>Descripción:</strong> {{ $pieza->descripcion }}</li>
-        <li><strong>Precio Coste:</strong> {{ $pieza->precio }} €</li>
     </ul>
 </div>
 
