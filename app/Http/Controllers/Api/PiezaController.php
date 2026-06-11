@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Pieza;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AlertaStockAgotado;
 
 class PiezaController extends Controller
 {
@@ -39,8 +41,18 @@ class PiezaController extends Controller
         // Primero busco la pieza exacta en la base de datos usando el ID que me llega. Si no existe, Laravel cortará el proceso automáticamente.
         $pieza = Pieza::findOrFail($id);
 
+        // Guardo el stock que había antes de aplicar los cambios del formulario.
+        $stockAnterior = $pieza->stock;
+
         // Una vez la tengo localizada, machaco sus datos antiguos con la información nueva que me llega en la petición.
         $pieza->update($request->all());
+
+        // Compruebo si el stock acaba de llegar a cero en esta misma edición
+        // Si el nuevo stock es 0 Y antes de actualizar sí que había stock
+        if ($pieza->stock <= 0 && $stockAnterior > 0) {
+            // Envio el correo electrónico.
+            Mail::to('taller@ofimaticadigital.es')->send(new AlertaStockAgotado($pieza));
+        }
 
         // Devuelvo el objeto actualizado al frontend para confirmar que el cambio se hizo bien.
         return $pieza;
